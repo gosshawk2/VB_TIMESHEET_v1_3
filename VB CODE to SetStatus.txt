@@ -1,0 +1,60 @@
+Sub SetStatus()
+		Dim strCurrentStatus As String
+        Dim strNewStatus As String
+        Dim strDeliveryDate As String
+        Dim strDeliveryREF As String
+        Dim strGRID As String
+        Dim strSupplier As String
+        Dim strLastSaved As String
+        Dim DeliveryInfoID As String
+        Dim AllValues() As Object
+        Dim AllFields() As String
+        Dim SortFields As String
+        Dim FieldType As String
+        Dim SearchText As String
+        Dim SearchField As String
+        Dim ReturnField As String
+        Dim ReturnValue As String
+        Dim Reversed As Boolean = False
+        Dim SearchCriteria As String
+        Dim UpdateCriteria As String
+        Dim FoundReference As Boolean = False
+        Dim UpdatedOK As Boolean = False
+        Dim strID As String
+        Dim ErrMessages As String
+        Dim FoundRef As Boolean = False
+        Dim DBInfoTable As String
+
+        If Len(Me.txtID.Text) = 0 Then
+            MsgBox("SELECT ROW IN GRID FIRST")
+            Exit Sub
+        End If
+        strID = Me.txtID.Text
+        strNewStatus = Me.txtNewStatus.Text
+
+        AllValues = Nothing
+        AllFields = Nothing
+        SortFields = "DeliveryDate"
+        Reversed = True
+        ErrMessages = ""
+        SearchCriteria = ""
+        SearchField = "DELIVERYREFERENCE"
+        SearchText = strDeliveryREF
+        FieldType = "String"
+        ReturnField = "ID"
+        ReturnValue = ""
+        If Len(strDeliveryREF) > 0 Then
+            FoundRef = Find_myQuery(frmMainGIForm.myConnString, DBInfoTable, SearchField, SearchText, FieldType, ReturnField, ReturnValue, AllValues,
+                                       AllFields, SearchCriteria, SortFields, Reversed, ErrMessages)
+            ASNNo = GetMYValuebyFieldname(AllValues, AllFields, "ASN_Number")
+        End If
+
+        If IsNumeric(strID) Then
+            UpdateCriteria = "ID = " & CLng(ReturnValue)
+            If UCase(frmMainGIForm.myAccessRights) = "ADMIN" Or UCase(frmMainGIForm.myAccessRights) = "SUPER" Then
+                'SEARCH for ID in tblDeliveryInfo:
+                'Then UPDATE OR JUST CAUSE THE specific procedure:
+                Call Change_STATUS(strDeliveryREF, strNewStatus, ErrMessages)
+            End If
+        End If
+end sub

@@ -1,0 +1,64 @@
+Sub PopulateMyDataSource(ByRef DSource As Object, ByVal connString As String, ByRef SQLStr As String,
+                             Optional ByRef NumRows As Integer = 0, Optional ByRef Message As String = "")
+        Dim con As MySqlConnection
+        Dim cmd As MySqlCommand
+        Dim da As MySqlDataAdapter
+        Dim ds As DataSet
+        Dim IDX As Integer = 0
+        Dim tblName As String = ""
+        Dim PosFrom As Integer = 0
+        Dim PosSpace As Integer = 0
+        Dim IdxCol As DataColumn
+
+        PosFrom = InStr(UCase(SQLStr), "FROM")
+        PosSpace = InStr(PosFrom + 5, SQLStr, " ")
+        If (PosSpace - PosFrom) - 5 > 0 Then
+            tblName = Mid(SQLStr, PosFrom + 5, (PosSpace - PosFrom) - 5)
+        Else
+            tblName = "PosFrom= " & CStr(PosFrom) & ", PosSpace= " & CStr(PosSpace)
+        End If
+
+        Try
+            con = New MySqlConnection(connString)
+            cmd = New MySqlCommand(SQLStr, con)
+            con.Open()
+            da = New MySqlDataAdapter(cmd)
+            ds = New DataSet()
+
+            da.Fill(ds, "srcTable") 'MYSQL DATE CONVERSION PROBLEM HERE !
+            If IsDBNull(ds.Tables("srcTable")) Then
+                'MsgBox("Problem: Empty Rows", vbOK, "Problem in Timesheet v" & frmMainGIForm.myVersion)
+                Message = "Problem: Empty Rows"
+                frmMainGIForm.logger.LogError("GI_Error_v1_3.log", Application.StartupPath, Message, "PopulateMyDataSource()",
+                                            " TableName=" & tblName & ", " & frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() &
+                                            ", OPERATOR Logged in:" & frmMainGIForm.myUsername)
+                NumRows = 0
+            Else
+                NumRows = ds.Tables("srcTable").Rows.Count
+                If NumRows > 0 Then
+                    DSource = ds.Tables("srcTable") 'THIS DOES NOT REFER TO THE DATAGRIDVIEW PROPERTIES. THIS IS JUST THE DATA SOURCE.
+                    If Not IsNothing(DSource) Then
+                        IdxCol = ds.Tables("srcTable").Columns.Add 'yea this does add a blank column to each grid.
+                        IdxCol.SetOrdinal(0) 'Yep this puts the new blank column as the first column in the data grid.
+                        IdxCol.ColumnName = "#"
+                        'IdxCol.width = 10
+                        For RowIDX = 0 To NumRows - 1
+                            'not valid:
+                            ds.Tables("srcTable").Rows(RowIDX)(0) = CStr(RowIDX + 1)
+                        Next
+                    End If
+                Else
+                    Message = "NOTHING FOUND"
+                End If
+
+            End If
+            con.Close()
+            'frmMainGIForm.AnyEvents = False
+        Catch ex As Exception
+            'MsgBox("Exception Error: " & ex.ToString, vbOK, "Exception Error in Asset Register")
+            Message = Message & vbCrLf & "Exception Error in PopulateMyDataSource: " & ex.ToString & ", SQL= " & SQLStr
+            frmMainGIForm.logger.LogError("GI_Error_v1_3.log", Application.StartupPath, Message, "PopulateMyDataSource()",
+                                        " TableName=" & tblName & ", " & frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() &
+                                        ", OPERATOR Logged in:" & frmMainGIForm.myUsername)
+        End Try
+end sub

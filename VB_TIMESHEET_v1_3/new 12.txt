@@ -1,0 +1,138 @@
+See the end of this message for details on invoking 
+just-in-time (JIT) debugging instead of this dialog box.
+
+************** Exception Text **************
+System.ArgumentNullException: Key specified was either empty or null.
+Parameter name: key
+   at System.Windows.Forms.Control.ControlCollection.Find(String key, Boolean searchAllChildren)
+   at VB_GOODS_IN_TIMESHEET_v1_0.frmMainGIForm.FindFrameControls(String FormName, String ControlName, String TAGNumber) in C:\Users\daniel.goss\Documents\VB TIMESHEET\VB_GOODS_IN_TIMESHEET_v1_0\VB_GOODS_IN_TIMESHEET_v1_0\Form_MainGIControlForm.vb:line 246
+   at VB_GOODS_IN_TIMESHEET_v1_0.Module_TIMESHEET.GetFrameControl(String Formname, String FrameName) in C:\Users\daniel.goss\Documents\VB TIMESHEET\VB_GOODS_IN_TIMESHEET_v1_0\VB_GOODS_IN_TIMESHEET_v1_0\DanG_TimeSheet_Module.vb:line 3256
+   at VB_GOODS_IN_TIMESHEET_v1_0.Module_TIMESHEET.ResetControls(Int64 LowerRange, Int64 UpperRange, Boolean Confirmation, String FrameName) in C:\Users\daniel.goss\Documents\VB TIMESHEET\VB_GOODS_IN_TIMESHEET_v1_0\VB_GOODS_IN_TIMESHEET_v1_0\DanG_TimeSheet_Module.vb:line 3235
+   at VB_GOODS_IN_TIMESHEET_v1_0.frmGI_RP_Userform.btnReset_Click(Object sender, EventArgs e) in C:\Users\daniel.goss\Documents\VB TIMESHEET\VB_GOODS_IN_TIMESHEET_v1_0\VB_GOODS_IN_TIMESHEET_v1_0\Form_GI_RP_Userform.vb:line 721
+   at System.Windows.Forms.Control.OnClick(EventArgs e)
+   at System.Windows.Forms.Button.OnClick(EventArgs e)
+   at System.Windows.Forms.Button.OnMouseUp(MouseEventArgs mevent)
+   at System.Windows.Forms.Control.WmMouseUp(Message& m, MouseButtons button, Int32 clicks)
+   at System.Windows.Forms.Control.WndProc(Message& m)
+   at System.Windows.Forms.ButtonBase.WndProc(Message& m)
+   at System.Windows.Forms.Button.WndProc(Message& m)
+   at System.Windows.Forms.Control.ControlNativeWindow.OnMessage(Message& m)
+   at System.Windows.Forms.Control.ControlNativeWindow.WndProc(Message& m)
+   at System.Windows.Forms.NativeWindow.Callback(IntPtr hWnd, Int32 msg, IntPtr wparam, IntPtr lparam)
+
+
+************** Loaded Assemblies **************
+mscorlib
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.6.127.1 built by: NETFXREL3STAGE
+    CodeBase: file:///C:/Windows/Microsoft.NET/Framework/v4.0.30319/mscorlib.dll
+----------------------------------------
+VB_GOODS_IN_TIMESHEET_v1_0
+    Assembly Version: 1.0.0.0
+    Win32 Version: 1.0.0.0
+    CodeBase: file:///C:/Users/daniel.goss/Documents/VB%20TIMESHEET/VB_GOODS_IN_TIMESHEET_v1_0/VB_GOODS_IN_TIMESHEET_v1_0/bin/Release/VB_GOODS_IN_TIMESHEET_v1_0.exe
+----------------------------------------
+Microsoft.VisualBasic
+    Assembly Version: 10.0.0.0
+    Win32 Version: 14.6.79.0 built by: NETFXREL2
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/Microsoft.VisualBasic/v4.0_10.0.0.0__b03f5f7f11d50a3a/Microsoft.VisualBasic.dll
+----------------------------------------
+System
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.6.1099.0 built by: NETFXREL4STAGE
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/System/v4.0_4.0.0.0__b77a5c561934e089/System.dll
+----------------------------------------
+System.Core
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.6.1099.0 built by: NETFXREL4STAGE
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/System.Core/v4.0_4.0.0.0__b77a5c561934e089/System.Core.dll
+----------------------------------------
+System.Windows.Forms
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.6.1055.0 built by: NETFXREL2
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/System.Windows.Forms/v4.0_4.0.0.0__b77a5c561934e089/System.Windows.Forms.dll
+----------------------------------------
+System.Drawing
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.6.1068.2 built by: NETFXREL3STAGE
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/System.Drawing/v4.0_4.0.0.0__b03f5f7f11d50a3a/System.Drawing.dll
+----------------------------------------
+System.Runtime.Remoting
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.6.1055.0 built by: NETFXREL2
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/System.Runtime.Remoting/v4.0_4.0.0.0__b77a5c561934e089/System.Runtime.Remoting.dll
+----------------------------------------
+System.Configuration
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.6.1055.0 built by: NETFXREL2
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/System.Configuration/v4.0_4.0.0.0__b03f5f7f11d50a3a/System.Configuration.dll
+----------------------------------------
+System.Xml
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.6.1064.2 built by: NETFXREL3STAGE
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/System.Xml/v4.0_4.0.0.0__b77a5c561934e089/System.Xml.dll
+----------------------------------------
+System.Deployment
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.6.1078.0 built by: NETFXREL3STAGE
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/System.Deployment/v4.0_4.0.0.0__b03f5f7f11d50a3a/System.Deployment.dll
+----------------------------------------
+MySql.Data
+    Assembly Version: 6.9.9.0
+    Win32 Version: 6.9.9.0
+    CodeBase: file:///C:/Users/daniel.goss/Documents/VB%20TIMESHEET/VB_GOODS_IN_TIMESHEET_v1_0/VB_GOODS_IN_TIMESHEET_v1_0/bin/Release/MySql.Data.DLL
+----------------------------------------
+System.Data
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.6.1087.0 built by: NETFXREL4STAGE
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_32/System.Data/v4.0_4.0.0.0__b77a5c561934e089/System.Data.dll
+----------------------------------------
+System.Transactions
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.6.1055.0 built by: NETFXREL2
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_32/System.Transactions/v4.0_4.0.0.0__b77a5c561934e089/System.Transactions.dll
+----------------------------------------
+System.EnterpriseServices
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.6.79.0 built by: NETFXREL2
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_32/System.EnterpriseServices/v4.0_4.0.0.0__b03f5f7f11d50a3a/System.EnterpriseServices.dll
+----------------------------------------
+System.Management
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.6.1100.4 built by: NETFXREL4STAGE
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/System.Management/v4.0_4.0.0.0__b03f5f7f11d50a3a/System.Management.dll
+----------------------------------------
+System.Numerics
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.6.1055.0 built by: NETFXREL2
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/System.Numerics/v4.0_4.0.0.0__b77a5c561934e089/System.Numerics.dll
+----------------------------------------
+Accessibility
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.6.79.0 built by: NETFXREL2
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_MSIL/Accessibility/v4.0_4.0.0.0__b03f5f7f11d50a3a/Accessibility.dll
+----------------------------------------
+CustomMarshalers
+    Assembly Version: 4.0.0.0
+    Win32 Version: 4.6.1055.0 built by: NETFXREL2
+    CodeBase: file:///C:/Windows/Microsoft.Net/assembly/GAC_32/CustomMarshalers/v4.0_4.0.0.0__b03f5f7f11d50a3a/CustomMarshalers.dll
+----------------------------------------
+
+************** JIT Debugging **************
+To enable just-in-time (JIT) debugging, the .config file for this
+application or computer (machine.config) must have the
+jitDebugging value set in the system.windows.forms section.
+The application must also be compiled with debugging
+enabled.
+
+For example:
+
+<configuration>
+    <system.windows.forms jitDebugging="true" />
+</configuration>
+
+When JIT debugging is enabled, any unhandled exception
+will be sent to the JIT debugger registered on the computer
+rather than be handled by this dialog box.
+
+

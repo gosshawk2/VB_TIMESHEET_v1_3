@@ -1,0 +1,160 @@
+Function InsertUpdateRecords_Using_Parameters(ByVal connString As String, ByVal UpdateRecords As Boolean, ByVal REcordID As String,
+                    ByVal DBTable As String, ByVal Fieldnames As String, ByVal FieldValues As String,
+                    Optional ByVal UpdateCriteria As String = "", Optional ByVal ExcludeFields As String = "", Optional ByRef ErrMessages As String = "",
+                    Optional EncaseFields As Boolean = False, Optional FieldValueDelim As String = ";") As Boolean
+
+        Dim cn As Object
+        Dim rs As Object
+        Dim cmd As MySqlCommand
+        Dim con As MySqlConnection
+        Dim myConn As String
+        Dim provider As String
+        'Dim cmd As oledbcommand
+        'Dim da As oledbdataadapter
+        Dim strSQL As String
+        Dim strDeliveryRef As String
+        Dim dtDeliveryDate As Date
+        Dim strDeliveryDate As String
+        Dim ExcludedFields As String
+        Dim FieldTypeArr() As String
+        Dim FieldType As Integer
+        Dim ParamInfo As String
+        Dim ParamLength As Long
+        Dim Dic_FieldTypes As Object
+        Dim Dic_ParamInfo As Object
+        Dim ParamInfoArr() As String
+        Dim FieldIDX As Integer
+        Dim ParamArr() As Object
+        Dim Param As Object
+        Dim ParamKey As String
+        Dim ParamName As String
+        Dim ParamValue As Object
+        Dim FieldLength As Integer
+        Dim FieldValue As String
+        Dim FieldTypes As String
+        Dim ErrMessage As String
+        Dim cmdResult As Integer
+
+        InsertUpdateRecords_Using_Parameters = False
+
+        'myConn = "G:\MIS\Goodsin Timesheet Data\GoodsInTimesheetRecords.accdb"
+
+        If Len(DBTable) > 0 Then
+            'strSQL = "INSERT INTO " & DBTable & " (" & Fieldnames & ") "
+            'strSQL = strSQL & " VALUES (""" & Fieldvalues & """);"
+        Else
+            MsgBox("DATABASE TABLE NOT SPECIFIED")
+            'cn.Close
+            'cn = Nothing
+            Exit Function
+        End If
+
+        'Set cn = ADODB.Connection
+        Dic_ParamInfo = CreateObject("Scripting.Dictionary")
+        Dic_ParamInfo.RemoveAll
+        Dic_FieldTypes = CreateObject("Scripting.Dictionary")
+        Dic_FieldTypes.RemoveAll
+        'Set TargetRange = ThisWorkbook.Sheets("Prefs").Range("A10")
+        con = New MySqlConnection(connString)
+        con.Open()
+        strSQL = "SELECT ID FROM " & DBTable & " ORDER BY ID desc"
+        cmd = New MySqlCommand(strSQL, con)
+        'Set cn = CreateObject("ADODB.Connection")
+
+        ExcludedFields = ExcludeFields
+
+        'Set Dic = CreateObject("Scripting.Dictionary")
+        ReDim FieldTypeArr(1)
+        ReDim ParamArr(1)
+        ErrMessage = ""
+        FieldTypes = ""
+        Call GetMyFields(DBTable, connString, ErrMessage, "", FieldTypes, 0, Dic_FieldTypes)
+
+        'SHOULD BE FieldTypes() as OBJECT - 03-SEP-2018
+        'GETTING AUTHENTICATION ERROR when the above function is run.
+
+        If UpdateRecords = True Then
+            strSQL = PrepareUpdate_With_Parameters(REcordID, connString, DBTable, Fieldnames, FieldValues, Dic_FieldTypes, Dic_ParamInfo, UpdateCriteria, ErrMessage, ExcludedFields, False, ",", FieldValueDelim)
+        Else
+            strSQL = PrepareInsert_With_Parameters(REcordID, connString, DBTable, Fieldnames, FieldValues, Dic_FieldTypes, Dic_ParamInfo, ErrMessage, ExcludedFields, False, ",", FieldValueDelim)
+        End If
+        'strSQL = "UPDATE " & DBTable & " SET [DeliveryDate] = ?"
+        'strDeliveryRef = "TEST-DAN-YES"
+        'Fieldnames = "DeliveryDate,DeliveryReference"
+        'dtDeliveryDate = CDate("21/05/2018")
+        'strDeliveryDate = Format(dtDeliveryDate, "dd/MM/yyyy")
+        'FieldValues = Chr(34) & strDeliveryDate & Chr(34) & "," & Chr(34) & strDeliveryRef & Chr(34)
+        'strSQL = "INSERT INTO " & DBTable & " (" & Fieldnames & ") "
+        'strSQL = strSQL & " VALUES (" & FieldValues & ")"
+        'MsgBox ("SQL= " & strSQL)
+        'cmd.Parameters.Clear
+        FieldIDX = 1
+
+        For Each ParamKey In Dic_ParamInfo
+            'ParamKey = "@" & fieldname
+            Param = Nothing
+            If Len(ParamKey) = 0 Then
+                Continue For
+            End If
+            'where does dic_fieldtypes come in ?????????????
+            ParamName = ParamKey
+            ParamInfo = Dic_ParamInfo(ParamKey)
+            ParamInfoArr = Split(ParamInfo, "_")
+            ParamLength = Len(ParamInfoArr(2))
+            If IsNumeric(ParamInfoArr(0)) Then
+                FieldType = CInt(ParamInfoArr(0))
+            Else
+                'bugger
+                FieldType = 0
+            End If
+            If IsNumeric(ParamInfoArr(1)) Then
+                FieldLength = CLng(ParamInfoArr(1))
+                If FieldType = 202 Or FieldType = 203 Then
+                    If FieldLength = 0 Then
+                        FieldLength = 1
+                    End If
+                End If
+            Else
+                'bugger
+                FieldLength = Len(ParamValue)
+            End If
+            If Len(ParamInfoArr(2)) > 0 And FieldType > 0 Then
+                'get fieldvalue
+                If IsDate(ParamInfoArr(2)) Then
+                    ParamValue = CDate(ParamInfoArr(2))
+                ElseIf IsNumeric(ParamInfoArr(2)) Then 'INTEGER / LONG / DOUBLE / DECIMAL / CURRENCY, a fieldtype of 3 or 5 .
+                    'ALSO Delivery Ref ends up here - as it looks like a numeric value !
+                    ParamValue = ParamInfoArr(2)
+                Else 'TEXT / STRING value:
+
+                    ParamValue = ParamInfoArr(2)
+                End If
+
+                'cmd.Parameters.Add("@Baz", SqlDbType.VarChar, 50).Value = Baz
+                'Return cmd.ExecuteScalar().ToString()
+                'End Using
+
+                cmd.Parameters.AddWithValue(ParamName, ParamValue)
+            Else
+                'Empty Value
+
+                'ParamValue = " " - was causing error in Numeric Fields.
+            End If
+            'TREAT DATES as STRINGS before Insertion:
+
+            FieldIDX = FieldIDX + 1
+        Next
+
+        cmdResult = cmd.ExecuteNonQuery
+
+        con.Close()
+        cmd = Nothing
+        con = Nothing
+        Dic_FieldTypes = Nothing
+        Dic_ParamInfo = Nothing
+        'Set ParamArr = Nothing
+        InsertUpdateRecords_Using_Parameters = True
+
+
+    End Function
+	

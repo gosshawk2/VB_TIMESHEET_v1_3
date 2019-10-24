@@ -1,0 +1,25 @@
+Public Class LongCaches(Of MyType)
+     Protected MyDictionary Dictionary(Of Long, MyType) = New Dictionary(Of Long, MyType)
+     Public Delegate Function MyFunction(Of Long) As MyType
+     Protected MyDelegate As MyFunction
+     Public Calculate As Function(ByVal input As Long) As MyType
+         If Not MyDictionary.ContainsKey(input) Then
+             MyDictionary(input) = MyFunction.Invoke(input)
+         End If
+         Return MyDictionary(input)
+     End Function
+     Public Sub New(ByVal myfunc As MyFunction)
+         MyDelegate = myfunc
+     End Sub
+End Caches
+You will need to use it like this:
+
+Private _MyLongCacheProperty As LongCaches(Of Double(,))
+Protected ReadOnly MyLongCacheProperty(i As Long) As LongCaches
+Get
+    If _MyLongCacheProperty Is Nothing Then
+        _MyLongCacheProperty = New LongCaches(Of Double(,))(AddressOf SomeCalculation)
+    End If
+    Return _MyLongCacheProperty.Calculate(i)
+End Get
+End Property

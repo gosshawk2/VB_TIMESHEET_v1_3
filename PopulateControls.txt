@@ -1,0 +1,1144 @@
+Sub PopulateControls(TheDeliveryDate As String, TheDeliveryRef As String,
+                         Optional ASNNo As String = "",
+                         Optional FormName As String = "GI_TIMESHEET_")
+        Dim DBTables() As String
+        Dim LowerTAG() As Long
+        Dim UpperTAG() As Long
+        Dim TAbleIDX As Long
+        Dim LoadedOK() As Boolean
+        Dim FieldIDX As Long
+        Dim StartIDX() As Long
+        Dim EndIDX() As Long
+        Dim FrameRows() As Long
+        Dim TotalControlsInFrame() As Long
+        Dim SearchField As String = ""
+        Dim SearchText As String = ""
+        Dim SearchCriteria As String = ""
+        Dim SortFields As String = ""
+        Dim Reversed As Boolean = False
+        Dim ReturnField As String
+        Dim ReturnValue As String
+        Dim AllValues() As Object = Nothing
+        Dim AllFields() As String = Nothing
+        Dim ErrMessage As String = ""
+        Dim dtDeliveryDate As DateTime
+        Dim strDeliveryDate As String
+        Dim FieldType As String = "STRING"
+        Dim strSupplier As String
+        Dim strDueTime As String
+        Dim strSHIFT As String
+        Dim strOrigin As String
+        Dim strResult As String = ""
+        Dim Fieldname As String = ""
+        Dim TagNumber As Long = 0
+        Dim NewTAGNumber As Long = 0
+        Dim TimeTagNumber As Long = 0
+        Dim TagIndex As Long = 0
+        Dim FoundCtrl As Control = Nothing
+        Dim ChildCtrl As Control = Nothing
+        Dim FieldNameArr() As String
+        Dim Fieldnames() As String
+        Dim FrameRowNumberField As String
+        Dim ControlDBTable As String
+        Dim ControlFontName As String
+        Dim ControlDeliveryDate As DateTime
+        Dim strDeliveryRef As String
+        Dim ControlDeliveryRef As String
+        Dim MakeVisible As Boolean = True
+        Dim ControlType As String = "TEXTBOX"
+        Dim ControlText As String = ""
+        Dim ControlLeft As Integer = 7
+        Dim ControlTop As Integer = 1
+        Dim ControlHeight As Integer = 23
+        Dim ControlWidth As Integer = 35
+        Dim ControlFontSize As Integer = 11
+        Dim ControlFontStyle As String
+        Dim ControlTAG As String
+        Dim ControlDate As String = Now()
+        Dim ControlASN As String
+        Dim ControlOBJCount As Long
+        Dim ControlStartTAG As String
+        Dim ControlEndTAG As String
+        Dim ControlTotalRows As Long ' need to know lowerTAG and number of fields in frame_Operatives.
+        Dim OpStartTAG As Long = 43
+        Dim OpFinishTAG As Long = 48
+        Dim OpTotalRows As Long = 0
+        Dim OpStartTime As String = "00:00:00"
+        Dim OpEndTime As String = "00:00:00"
+        Dim ShortTotalRows As Long = 0
+        Dim ExtraTotalRows As Long = 0
+        Dim ShortStartTAG As Long = 0
+        Dim ExtraStartTAG As Long = 0
+        Dim ShortOrExtra As String = ""
+        Dim ControlBACKCOLOUR As Integer = RGB(0, 112, 192) 'BLUE, RGB(240, 248, 255) 'ALICEBLUE
+        Dim ControlForeColor As Integer = RGB(255, 245, 60) 'yellow text
+        Dim ControlLeftMargin As Boolean = False
+        Dim ControlFieldname As String = ""
+        Dim ControlRowNumber As Long
+        Dim ComboArray() As String = Nothing
+        Dim ControlName As String = ""
+        Dim varKeyAsn As String = ""
+        Dim varKeyRef As String = ""
+        Dim Frame_Extra_Parts As ScrollableControl
+        Dim Frame_FLMDetails As ScrollableControl
+        Dim Frame_InboundSchedule As ScrollableControl
+        Dim Frame_OperationalInput As ScrollableControl
+        Dim Frame_Operatives As ScrollableControl
+        Dim Frame_OpsShortsAndExtras As ScrollableControl
+        Dim Frame_Short_Parts As ScrollableControl
+        Dim Frame_SupplierCompliance As ScrollableControl
+        Dim ControlFrameName As String = ""
+        Dim NewIndex As Long = 0
+        Dim ListArray() As Object = Nothing
+        Dim ControlTextAlign As String = ""
+        Dim NewTextBox As New TextBox
+        Dim LastRow As Long
+        Dim dtStartTime As DateTime
+        Dim dtEndTime As DateTime
+        Dim FLMName As String = ""
+        Dim OpName As String = ""
+        Dim OpActivity As String = ""
+        Dim OpComments As String = ""
+        Dim ShortPartNo As String = ""
+        Dim ShortQty As String = ""
+        Dim intShortQty As Long
+        Dim ExtraPartNo As String = ""
+        Dim intExtraQty As Long
+        Dim ExtraQty As String = ""
+        Dim SavedOK() As Boolean
+        Dim LabourFields As String
+        Dim LabourFieldValues As String
+        Dim SaveCriteria As String = ""
+        Dim ExcludeFields As String = ""
+        Dim SCFieldsArr() As String = Nothing
+        Dim tempTotals As New clsTotals
+        Dim ExtractTotals As New clsTotals
+        Dim strSaveDeliveryDate As String
+        Dim dtLastSaved As DateTime
+        Dim strLastSaved As String
+        Dim ControlTABIndex As Long
+        Dim StartControlTABIndex As Long
+        Dim tempControl As clsControls
+        Dim UpdatedByName As String
+        Dim UpdatedByUsername As String
+        Dim UpdatedByEmpNo As String
+        Dim ControlPrimaryKey As Long
+        Dim SCPrimaryKey As Long
+        Dim OpPrimaryKey As Long
+        Dim ShortPrimaryKey As Long
+        Dim ExtraPrimaryKey As Long
+        Dim ReturnFromSql As Object
+        Dim strSQL As String
+        Dim OpLoadedOK As Boolean
+        Dim OpControl As Control
+        Dim ChangeProperty As String
+        Dim testCollection As Object
+        Dim RecordLocked As Boolean = False
+        Dim DisableFLMStartButton As Boolean = False
+        Dim DisableFLMFinishButton As Boolean = False
+        Dim DisableOpStartButton As Boolean = False
+        Dim DisableOpFinishButton As Boolean = False
+        Dim DisableOpStartEntry As Boolean = True
+        Dim DisableOpFinishEntry As Boolean = True
+        Dim dblTotalHours As Double = 0.0F
+
+        Frame_Extra_Parts = GetFrameControl(FormName & frmMainGIForm.ControlPanelIdx, "Frame_Extra_Parts")
+        Frame_FLMDetails = GetFrameControl(FormName & frmMainGIForm.ControlPanelIdx, "Frame_FLMDetails")
+        Frame_InboundSchedule = GetFrameControl(FormName & frmMainGIForm.ControlPanelIdx, "Frame_InboundSchedule")
+        Frame_OperationalInput = GetFrameControl(FormName & frmMainGIForm.ControlPanelIdx, "Frame_OperationalInput")
+        Frame_Operatives = GetFrameControl(FormName & frmMainGIForm.ControlPanelIdx, "Frame_Operatives")
+        Frame_OpsShortsAndExtras = GetFrameControl(FormName & frmMainGIForm.ControlPanelIdx, "Frame_OpsShortsAndExtras")
+        Frame_Short_Parts = GetFrameControl(FormName & frmMainGIForm.ControlPanelIdx, "Frame_Short_Parts")
+        Frame_SupplierCompliance = GetFrameControl(FormName & frmMainGIForm.ControlPanelIdx, "Frame_SupplierCompliance")
+
+        Frame_Operatives.Controls.Clear()
+        Frame_Short_Parts.Controls.Clear()
+        Frame_Extra_Parts.Controls.Clear()
+        Frame_FLMDetails.Controls.Clear()
+
+
+        ReDim DBTables(6)
+        ReDim LowerTAG(6)
+        ReDim UpperTAG(6)
+        ReDim LoadedOK(6)
+        ReDim StartIDX(6)
+        ReDim EndIDX(6)
+        ReDim FrameRows(6)
+        ReDim TotalControlsInFrame(6)
+        ReDim Fieldnames(6)
+        ReDim SavedOK(6)
+
+        '**************************************************************************************************************************************
+        'HOW DO WE TEST IF ANOTHER USER IS ALREADY EDITING THIS REFERENCE ?????????????????????
+        '**************************************************************************************************************************************
+        ' - Need to put some kind of LOCK in place here. record username / EmpNo until finished editing - ie SAVED
+        '- maybe a LOCK table in the database ?
+        ' - tblLOCKUsers
+        'ID, DeliveryDate, DeliveryReferenceBeingEdited, Username, UserEmpNo,Current DateTime, LOCKED = YES / NO , LastEdited
+        '- number of records in this table will depend on number of users currently logged on.
+        'Check the LOCK table as soon as user has selected a reference. HALT further processing until table has been checked and is CLEAR to EDIT.
+        'Purge table the following day. (shows total References that have been edited / worked on.
+
+        'TRY
+
+        If Len(ASNNo) > 0 Then
+            'lookup in DB - tblDeliveryInfo the corresponding Delivery Reference:
+            SearchText = ASNNo
+            ControlASN = ASNNo
+            SearchField = "ASN_Number"
+            FieldType = "STRING"
+            ReturnField = "ID"
+            ReturnValue = ""
+            SortFields = ""
+            Reversed = False
+            DBTables(1) = "tblDeliveryInfo"
+            'comASNNo
+            'frmMainGIForm.InsertValueIntoForm(ControlPanelFormName & frmMainGIForm.ControlPanelIdx, "comASNNo", ControlASN)
+            'SearchCriteria = "ASN_Number = " & Chr(34) & ASNNo & Chr(34)
+            LoadedOK(1) = Find_myQuery(frmMainGIForm.myConnString, DBTables(1), SearchField, SearchText, FieldType, ReturnField, ReturnValue, AllValues,
+                                   AllFields, SearchCriteria, SortFields, Reversed, ErrMessage)
+            If LoadedOK(1) Then
+                strDeliveryRef = GetMYValuebyFieldname(AllValues, AllFields, "DeliveryReference")
+            Else
+                MsgBox("Could not find corresponding Delivery Reference")
+                Exit Sub
+            End If
+        Else
+            strDeliveryRef = ""
+        End If
+
+        If Len(strDeliveryRef) = 0 Then
+            strDeliveryRef = TheDeliveryRef
+        Else
+            'Check if REFERENCE is Locked:
+            'Has it got LOCKED against the reference in tblDeliveryInfo ???
+
+
+            'LOCK THIS REFERENCE:
+            'SET LOCkeD against This Reference in tblDeliveryInfo - use UPDATE method
+
+
+            'UNLOCK reference after the SAVE button has been clicked ?
+            ' - No - need a flag to see IF it has been saved -  if not warn user before switching to another Reference.
+            'Need to check for LOCKED against reference - If there IS and there is NO reference in the comReference field then 
+            ' - UNLOCK the reference.
+
+        End If
+
+
+        If Len(TheDeliveryDate) = 0 Then
+            dtDeliveryDate = CDate("1970-01-01 00:00:00")
+            strDeliveryDate = dtDeliveryDate.ToString("dd/MM/yyyy")
+
+            If Len(strDeliveryRef) > 0 Then
+                SearchText = strDeliveryRef
+                ControlASN = ASNNo
+                SearchField = "DeliveryReference"
+                FieldType = "STRING"
+                ReturnField = "ID"
+                ReturnValue = ""
+                SortFields = ""
+                Reversed = False
+                DBTables(1) = "tblDeliveryInfo"
+                'comASNNo
+                'frmMainGIForm.InsertValueIntoForm(ControlPanelFormName & frmMainGIForm.ControlPanelIdx, "comASNNo", ControlASN)
+                'SearchCriteria = "ASN_Number = " & Chr(34) & ASNNo & Chr(34)
+                LoadedOK(1) = Find_myQuery(frmMainGIForm.myConnString, DBTables(1), SearchField, SearchText, FieldType, ReturnField, ReturnValue, AllValues,
+                                       AllFields, SearchCriteria, SortFields, Reversed, ErrMessage)
+                If LoadedOK(1) Then
+                    strDeliveryDate = GetMYValuebyFieldname(AllValues, AllFields, "DeliveryDate")
+                    frmMainGIForm.InsertValueIntoForm(FormName & frmMainGIForm.ControlPanelIdx, "txtSelectDeliveryDate", strDeliveryDate)
+                Else
+                    MsgBox("Could not find corresponding Delivery Date")
+                    Exit Sub
+                End If
+
+
+            End If
+
+        Else
+            dtDeliveryDate = CDate(TheDeliveryDate)
+
+            strDeliveryDate = dtDeliveryDate.ToString("dd/MM/yyyy")
+        End If
+
+        'frmMainGIForm.dic_Totals = CreateObject("Scripting.Dictionary") 'NOT part of ANYMORE in frmMainGIForm - 28/08/2018
+        'frmMainGIForm.dic_Totals.comparemode = vbTextCompare
+
+        'rmMainGIForm.Dic_TotalOperatives(strDeliveryDate & "_" & strDeliveryRef) = 1
+
+        tempTotals.Total_Operatives = 0
+        tempTotals.Total_ShortParts = 0
+        tempTotals.Total_ExtraParts = 0
+        tempTotals.HighestOpTAGID = 43
+        tempTotals.HighestOpBtnTAGID = 10
+        tempTotals.HighestShortTAGID = 1001
+        tempTotals.HighestExtraTAGID = 2001
+        tempTotals.HighestOpTabIndex = 1
+        tempTotals.HighestShortTABIndex = 1
+        tempTotals.HighestExtraTABIndex = 1
+        tempTotals.TotalOpHours = 0
+        tempTotals.TotalFLMHours = 0
+
+        'If Not dic_Totals.exists(strDeliveryDate & "_" & strDeliveryRef) Then
+        dic_Totals(strDeliveryDate & "_" & strDeliveryRef) = tempTotals
+        'End If
+
+        DBTables(1) = "tblDeliveryInfo"
+        DBTables(2) = "tblSupplierCompliance"
+        DBTables(3) = "tblLabourHours"
+        DBTables(4) = "tblOperatives"
+        DBTables(5) = "tblShortsAndExtraParts"
+        DBTables(6) = "tblShortsAndExtraParts"
+
+        TotalControlsInFrame(1) = 1
+        TotalControlsInFrame(2) = 1
+        TotalControlsInFrame(3) = 1
+        TotalControlsInFrame(4) = 6
+        TotalControlsInFrame(5) = 3
+        TotalControlsInFrame(6) = 3
+        LowerTAG(1) = 1
+        UpperTAG(1) = 30
+        LowerTAG(2) = 801
+        UpperTAG(2) = 807
+        LowerTAG(3) = 40
+        UpperTAG(3) = 42
+        LowerTAG(4) = 43
+        UpperTAG(4) = 48
+        LowerTAG(5) = 1001
+        UpperTAG(5) = 1003
+        LowerTAG(6) = 2001
+        UpperTAG(6) = 2003
+        If Len(strDeliveryDate) = 0 Then
+            MsgBox("No Delivery Date found")
+            Exit Sub
+        End If
+        SearchCriteria = ""
+        ReturnField = "ID"
+        dtDeliveryDate = CDate(strDeliveryDate)
+        strSaveDeliveryDate = dtDeliveryDate.ToString("yyyy-MM-dd HH:mm:ss")
+        'strDeliveryRef = TheDeliveryRef
+        ControlDeliveryRef = TheDeliveryRef
+        SearchText = strSaveDeliveryDate
+        'SearchCriteria = "([DeliveryDate] = #" & strDeliveryDate & "#) And ([DeliveryReference] = " & Chr(34) & strDeliveryRef & Chr(34) & ")"
+        If Len(TheDeliveryRef) > 0 Then
+
+
+            'SearchCriteria = "DeliveryReference = " & Chr(34) & TheDeliveryRef & Chr(34)
+        End If
+
+        SortFields = ""
+
+        'Fieldnames = GetMyFields("tblOperatives", frmMainGIForm.myConnString, ErrMessage)
+        'FieldNameArr = DanG_DB_Tools.strToStringArray(Fieldnames, ",", 1, False, False, False, "_", False)
+        ReDim FieldNameArr(20)
+        'Fieldnames = GetMyFields("tblOperatives", frmMainGIForm.myConnString, ErrMessage)
+
+        Fieldnames(1) = GetMyFields(DBTables(1), frmMainGIForm.myConnString, ErrMessage)
+        Fieldnames(2) = GetMyFields(DBTables(2), frmMainGIForm.myConnString, ErrMessage)
+        Fieldnames(3) = GetMyFields(DBTables(3), frmMainGIForm.myConnString, ErrMessage)
+        Fieldnames(4) = GetMyFields(DBTables(4), frmMainGIForm.myConnString, ErrMessage)
+        Fieldnames(5) = GetMyFields(DBTables(5), frmMainGIForm.myConnString, ErrMessage)
+        Fieldnames(6) = GetMyFields(DBTables(6), frmMainGIForm.myConnString, ErrMessage)
+        FieldNameArr = DanG_DB_Tools.strToStringArray(Fieldnames(1), ",", 1, False, False, False, "_", False)
+
+        'ID is at pos=1
+        FrameRowNumberField = "FrameRowNumber"
+
+        ControlDBTable = DBTables(1)
+        ControlFontName = "Cambria"
+
+        If IsDate(strDeliveryDate) Then
+            ControlDeliveryDate = CDate(strDeliveryDate)
+        Else
+            'MsgBox ("Need to pass proper delivery date")
+            'Exit Sub
+            ControlDeliveryDate = CDate("01/01/1970")
+        End If
+        ControlDeliveryRef = strDeliveryRef
+
+        MakeVisible = True
+        ControlType = "TEXTBOX"
+        'ControlText = CStr(OpID)
+        ControlLeft = 7
+        ControlTop = 1
+        ControlHeight = 23
+        ControlWidth = 35
+        ControlFontSize = 11
+        ControlFontStyle = "BOLD"
+        'ControlTAG = CStr(TagID)
+        ControlDate = Now()
+        ControlASN = ""
+        ControlOBJCount = 1
+        ControlStartTAG = ""
+        ControlEndTAG = ""
+        ReturnValue = ""
+        ControlTotalRows = 0 ' need to know lowerTAG and number of fields in frame_Operatives.
+        'BackColor = RGB(240, 248, 255) 'ALICEBLUE
+        'ControlBackColor = RGB(0, 112, 192) 'BLUE
+        'ControlForeColor = RGB(255, 245, 60) 'yellow text
+        'ControlLeftMargin = False
+        'ControlFieldname = FrameRowNumberField
+        'ControlRowNumber = OpID
+        'ControlTotalRows = TotalOps
+        'ComboArray = Nothing
+
+        'OperativeFrame = GetFrameControl(ControlPanelFormName & frmMainGIForm.ControlPanelIdx, "Frame_Operatives")
+        'TotalFrameRows = GetTotalFrameRows(OperativeFrame, ControlLowerTag, ControlUpperTag, ControlsPerRow(4), VTTAG)
+        Beep()
+        Clear_Entry_Controls(FormName & frmMainGIForm.ControlPanelIdx, 1, 40)
+        Clear_Entry_Controls(FormName & frmMainGIForm.ControlPanelIdx, 801, 807)
+        SearchText = strDeliveryRef
+        SearchField = "DeliveryReference"
+        FieldType = "STRING"
+        Reversed = False
+        LoadedOK(1) = Find_myQuery(frmMainGIForm.myConnString, DBTables(1), SearchField, SearchText, FieldType, ReturnField, ReturnValue, AllValues,
+                                   AllFields, SearchCriteria, SortFields, Reversed, ErrMessage)
+        If LoadedOK(1) Then
+            ControlDeliveryRef = strDeliveryRef
+            strSupplier = AllValues(3)
+            ControlASN = AllValues(4)
+            If Len(ReturnValue) > 0 And IsNumeric(ReturnValue) Then
+                ControlPrimaryKey = CLng(ReturnValue)
+            End If
+            If Len(ControlASN) > 0 Then
+                varKeyAsn = strDeliveryDate & "_" & ControlASN & "_" & "1"
+            End If
+            varKeyRef = strDeliveryDate & "_" & ControlDeliveryRef & "_" & "1"
+            'Call UpdateCollection(dic_Controls, "", AllValues(1), AllValues(1), AllValues(5), AllValues(2), "1", "VALUE")
+            'Call UpdateCollection(dic_Controls, "", Frame_InboundSchedule.Name, AllValues(1), AllValues(5), AllValues(2), "4", "FRAMENAME")
+            frmMainGIForm.InsertValueIntoForm(FormName & frmMainGIForm.ControlPanelIdx, "txtDeliveryDate", AllValues(1))
+            frmMainGIForm.InsertValueIntoForm(FormName & frmMainGIForm.ControlPanelIdx, "txtDeliveryRef", AllValues(2))
+            frmMainGIForm.InsertValueIntoForm(FormName & frmMainGIForm.ControlPanelIdx, "txtSupplier", strSupplier)
+            frmMainGIForm.Text = frmMainGIForm.myUsername & ", REF: " & strDeliveryRef
+
+            FieldIDX = 1
+            TagNumber = LowerTAG(1)
+            Do While FieldIDX < UBound(AllValues) - 1
+                ControlFieldname = AllFields(FieldIDX)
+                strResult = GetMYValuebyFieldname(AllValues, AllFields, ControlFieldname)
+                'Find correct field to put value into now.
+                'FoundCtrl = frmMainGIForm.FindControl_Recursive(frmMainGIForm.)
+                FoundCtrl = frmMainGIForm.FindControls(FormName & frmMainGIForm.ControlPanelIdx, "", CStr(TagNumber), ChildCtrl)
+                If FoundCtrl IsNot Nothing Then
+                    'put value into control:
+                    frmMainGIForm.InsertValueIntoForm(FormName & frmMainGIForm.ControlPanelIdx, FoundCtrl.Name, strResult)
+                    'Insert into Dic_Controls:
+                    varKeyRef = strDeliveryDate & "_" & strDeliveryRef & "_" & TagNumber
+                    ControlName = FoundCtrl.Name
+                    ControlTAG = CStr(TagNumber)
+                    ControlTABIndex = FoundCtrl.TabIndex
+                    ControlText = strResult
+                    ControlType = "TEXTBOX"
+                    ControlLeft = FoundCtrl.Left
+                    ControlTop = FoundCtrl.Top
+                    ControlWidth = FoundCtrl.Width
+                    ControlHeight = FoundCtrl.Height
+                    ControlOBJCount = TagNumber
+                    ControlStartTAG = "1"
+                    ControlEndTAG = "27"
+                    ControlRowNumber = 1
+                    ControlTotalRows = 1
+                    ListArray = Nothing
+                    ControlBACKCOLOUR = System.Drawing.ColorTranslator.ToWin32(FoundCtrl.BackColor)
+                    ControlForeColor = System.Drawing.ColorTranslator.ToWin32(FoundCtrl.ForeColor)
+                    ControlFontName = FoundCtrl.Font.Name
+                    ControlFontSize = FoundCtrl.Font.Size
+                    If FoundCtrl.Font.Bold Then
+                        ControlFontStyle = "BOLD"
+                    Else
+                        ControlFontStyle = "NORMAL"
+                    End If
+                    If FoundCtrl.Font.Italic Then
+                        ControlFontStyle = ControlFontStyle & "," & "ITALIC"
+                    End If
+                    If FoundCtrl.Font.Underline Then
+                        ControlFontStyle = ControlFontStyle & "," & "UNDERLINE"
+                    End If
+                    If FoundCtrl.Font.Strikeout Then
+                        ControlFontStyle = ControlFontStyle & "," & "STRIKEOUT"
+                    End If
+                    If TypeOf (FoundCtrl) Is TextBox Then
+                        NewTextBox = DirectCast(FoundCtrl, System.Windows.Forms.TextBox)
+                        If NewTextBox.TextAlign = HorizontalAlignment.Left Then
+                            ControlTextAlign = "LEFT"
+                        ElseIf NewTextBox.TextAlign = HorizontalAlignment.Center Then
+                            ControlTextAlign = "CENTER"
+                        ElseIf NewTextBox.TextAlign = HorizontalAlignment.Right Then
+                            ControlTextAlign = "RIGHT"
+                        Else
+                            ControlTextAlign = ""
+                        End If
+                    End If
+                    NewIndex = AddNewControl(False, Frame_InboundSchedule, DBTables(1), ControlFieldname, "ID", FoundCtrl, ControlName,
+                                         ControlText, ControlType, ControlTAG, ControlTABIndex, ControlDate, ControlLeft, ControlTop,
+                                         ControlWidth, ControlHeight, ControlDeliveryDate, ControlDeliveryRef,
+                                         frmMainGIForm.myEmpNo, frmMainGIForm.myUsername, frmMainGIForm.myName, ControlASN,
+                                         ControlOBJCount, ControlStartTAG, ControlEndTAG, ControlRowNumber, ControlTotalRows,
+                                         True, ListArray, ControlBACKCOLOUR, False, ControlFontName, ControlFontSize,
+                                         ControlFontStyle, ControlForeColor, ControlTextAlign, "MIDDLE CENTER", False, False,
+                                         CDate("01/01/1970"), CDate("01/01/1970"), ControlPrimaryKey)
+                End If
+                FieldIDX = FieldIDX + 1
+                TagNumber = TagNumber + 1
+            Loop
+            'strOrigin = GetMYValuebyFieldname(AllValues, AllFields, "Origin")
+        End If
+
+        Call Get_TotalHours_From_DB(strDeliveryDate, strDeliveryRef)
+
+        FieldIDX = 3
+        SCFieldsArr = strToStringArray(SCFieldnames, ",", 0, False, False, False, "_", False, 34, 39)
+        varKeyRef = strDeliveryDate & "_" & strDeliveryRef & "_" & "1"
+        tempControl = dic_Controls(varKeyRef)
+        UpdatedByEmpNo = tempControl.ControlUpdatedByEmpNo
+        UpdatedByName = tempControl.ControlUpdatedByName
+        UpdatedByUsername = tempControl.ControlUpdatedByUsername
+        LoadedOK(2) = Find_myQuery(frmMainGIForm.myConnString, DBTables(2), SearchField, SearchText, FieldType, ReturnField, ReturnValue, AllValues,
+                                   AllFields, SearchCriteria, SortFields, Reversed, ErrMessage)
+        'If LoadedOK(2) Then
+        'tblsupplierCompliance:
+        If Not LoadedOK(2) Then
+            dtLastSaved = Now()
+            strLastSaved = dtLastSaved.ToString("yyyy-MM-dd HH:mm:ss")
+            SaveCriteria = ""
+            LabourFields = "DeliveryDate,DeliveryReference,UpdatedByEmpNo,UpdatedByUsername,UpdatedByName,LastSaved"
+            'LabourFieldValues = Chr(39) & strSaveDeliveryDate & Chr(39) & "," & Chr(34) & strDeliveryRef & Chr(34) & "," & Chr(39) & strLastSaved & Chr(39)
+            LabourFieldValues = CDate(strDeliveryDate) & "," & strDeliveryRef
+            LabourFieldValues = LabourFieldValues & "," & UpdatedByEmpNo & "," & UpdatedByUsername & "," & UpdatedByName
+            LabourFieldValues = LabourFieldValues & "," & dtLastSaved
+            ExcludeFields = ""
+            'SavedOK(2) = InsertUpdateMyRecord(False, frmMainGIForm.myConnString, DBTables(2), LabourFields, LabourFieldValues, ErrMessage, SaveCriteria, ExcludeFields)
+            SavedOK(2) = InsertUpdateRecords_Using_Parameters(frmMainGIForm.myConnString, False, "", DBTables(2), LabourFields, LabourFieldValues, SaveCriteria, ExcludeFields, ErrMessage)
+        End If
+        Clear_Entry_Controls(FormName & frmMainGIForm.ControlPanelIdx, 801, 807)
+        TagNumber = LowerTAG(2)
+        LoadedOK(2) = Find_myQuery(frmMainGIForm.myConnString, DBTables(2), SearchField, SearchText, FieldType, ReturnField, ReturnValue, AllValues,
+                                   AllFields, SearchCriteria, SortFields, Reversed, ErrMessage)
+        If Len(ReturnValue) > 0 And IsNumeric(ReturnValue) Then
+            SCPrimaryKey = CLng(ReturnValue)
+        End If
+        Do While FieldIDX < UBound(SCFieldsArr) - 1
+            ControlFieldname = SCFieldsArr(FieldIDX)
+            If ControlFieldname Is Nothing Then
+                Continue Do
+            End If
+            If LoadedOK(2) Then
+                strResult = GetMYValuebyFieldname(AllValues, AllFields, ControlFieldname)
+            Else
+                strResult = ""
+            End If
+
+            'Find correct field to put value into now.
+            'FoundCtrl = frmMainGIForm.FindControl_Recursive(frmMainGIForm.)
+            FoundCtrl = frmMainGIForm.FindControls(FormName & frmMainGIForm.ControlPanelIdx, "", CStr(TagNumber), ChildCtrl)
+            If FoundCtrl IsNot Nothing Then
+                'put value into control:
+                frmMainGIForm.InsertValueIntoForm(FormName & frmMainGIForm.ControlPanelIdx, FoundCtrl.Name, strResult)
+                'Insert into Dic_Controls:
+                varKeyRef = strDeliveryDate & "_" & strDeliveryRef & "_" & TagNumber
+                ControlName = FoundCtrl.Name
+                ControlTAG = CStr(TagNumber)
+                ControlTABIndex = FoundCtrl.TabIndex
+                ControlText = strResult
+                ControlType = "TEXTBOX"
+                ControlLeft = FoundCtrl.Left
+                ControlTop = FoundCtrl.Top
+                ControlWidth = FoundCtrl.Width
+                ControlHeight = FoundCtrl.Height
+                ControlOBJCount = TagNumber
+                ControlStartTAG = CStr(LowerTAG(2))
+                ControlEndTAG = CStr(UpperTAG(2))
+                ControlRowNumber = 1
+                ControlTotalRows = 1
+                ListArray = Nothing
+                ControlBACKCOLOUR = System.Drawing.ColorTranslator.ToWin32(FoundCtrl.BackColor)
+                ControlForeColor = System.Drawing.ColorTranslator.ToWin32(FoundCtrl.ForeColor)
+                ControlFontName = FoundCtrl.Font.Name
+                ControlFontSize = FoundCtrl.Font.Size
+                If FoundCtrl.Font.Bold Then
+                    ControlFontStyle = "BOLD"
+                Else
+                    ControlFontStyle = "NORMAL"
+                End If
+                If FoundCtrl.Font.Italic Then
+                    ControlFontStyle = ControlFontStyle & "," & "ITALIC"
+                End If
+                If FoundCtrl.Font.Underline Then
+                    ControlFontStyle = ControlFontStyle & "," & "UNDERLINE"
+                End If
+                If FoundCtrl.Font.Strikeout Then
+                    ControlFontStyle = ControlFontStyle & "," & "STRIKEOUT"
+                End If
+                If TypeOf (FoundCtrl) Is TextBox Then
+                    NewTextBox = DirectCast(FoundCtrl, System.Windows.Forms.TextBox)
+                    If NewTextBox.TextAlign = HorizontalAlignment.Left Then
+                        ControlTextAlign = "LEFT"
+                    ElseIf NewTextBox.TextAlign = HorizontalAlignment.Center Then
+                        ControlTextAlign = "CENTER"
+                    ElseIf NewTextBox.TextAlign = HorizontalAlignment.Right Then
+                        ControlTextAlign = "RIGHT"
+                    Else
+                        ControlTextAlign = ""
+                    End If
+                End If
+                NewIndex = AddNewControl(False, Frame_SupplierCompliance, DBTables(2), ControlFieldname, "ID", FoundCtrl, ControlName,
+                                             ControlText, ControlType, ControlTAG, ControlTABIndex, ControlDate, ControlLeft, ControlTop,
+                                             ControlWidth, ControlHeight, ControlDeliveryDate, ControlDeliveryRef,
+                                             frmMainGIForm.myEmpNo, frmMainGIForm.myUsername, frmMainGIForm.myName, ControlASN,
+                                             ControlOBJCount, ControlStartTAG, ControlEndTAG, ControlRowNumber, ControlTotalRows,
+                                             True, ListArray, ControlBACKCOLOUR, False, ControlFontName, ControlFontSize,
+                                             ControlFontStyle, ControlForeColor, ControlTextAlign, "MIDDLE CENTER", False, False,
+                                                CDate("1970-01-01"), CDate("1970-01-01"), SCPrimaryKey)
+            End If 'FoundCtrl
+            FieldIDX = FieldIDX + 1
+            TagNumber = TagNumber + 1
+        Loop
+
+        'CHECK FLM DETAILS and LOAD:
+
+        AllValues = Nothing
+        AllFields = Nothing
+        SortFields = ""
+        Reversed = False
+        ErrMessage = ""
+        SearchCriteria = ""
+        SearchField = "DELIVERYREFERENCE"
+        SearchText = strDeliveryRef
+        FieldType = "String"
+        ReturnField = "ID"
+        ReturnValue = ""
+
+        OpTotalRows = Get_TotalRows("tblOperatives", strDeliveryRef)
+        ReturnValue = ""
+        LoadedOK(3) = Find_myQuery(frmMainGIForm.myConnString, DBTables(3), SearchField, SearchText, FieldType, ReturnField, ReturnValue, AllValues,
+                                   AllFields, SearchCriteria, SortFields, Reversed, ErrMessage)
+        If LoadedOK(3) Then
+            'tblLAbourHours: - extract FLM info:
+            FLMName = GetMYValuebyFieldname(AllValues, AllFields, "FLM_Name")
+            dtStartTime = CDate(GetMYValuebyFieldname(AllValues, AllFields, "FLM_StartTime"))
+            dtEndTime = CDate(GetMYValuebyFieldname(AllValues, AllFields, "FLM_FinishTime"))
+            If dtStartTime > CDate("1970-01-01") Then
+                DisableFLMStartButton = True
+            Else
+                DisableFLMStartButton = False
+            End If
+            If dtEndTime > CDate("1970-01-01") Then
+                DisableFLMStartButton = True
+            Else
+                DisableFLMStartButton = False
+            End If
+            FieldIDX = 3
+            TagNumber = LowerTAG(3)
+            NewTAGNumber = TagNumber
+            ControlType = "COMBOBOX"
+            ControlTABIndex = 33 'START TAB INDEX
+            Call InsertFLMButtons(LoadedOK(3), Frame_FLMDetails, strDeliveryDate, strDeliveryRef, ControlASN, "",
+                                  FLMName, dtStartTime, dtEndTime, ControlTABIndex, DisableFLMStartButton, DisableFLMFinishButton)
+            Do While FieldIDX < 6
+                NewTAGNumber = TagNumber
+                ControlFieldname = AllFields(FieldIDX)
+                strResult = GetMYValuebyFieldname(AllValues, AllFields, ControlFieldname)
+                If UCase(ControlFieldname) = UCase("FLM_Name") Then
+                    FLMName = strResult
+                End If
+                If UCase(ControlFieldname) = UCase("FLM_StartTime") Then
+                    dtStartTime = CDate(strResult)
+                    strResult = dtStartTime.ToString("HH:mm:ss")
+
+                End If
+                If UCase(ControlFieldname) = UCase("FLM_FinishTime") Then
+                    dtEndTime = CDate(strResult)
+                    strResult = dtEndTime.ToString("HH:mm:ss")
+
+                End If
+                'Find correct field to put value into now.
+                If FieldIDX = 4 Then
+                    NewTAGNumber = TagNumber + 400 'DANGEROUS - any more controls in this frame - use a sep variable.
+                    ControlType = "TEXTBOX"
+                End If
+                'FoundCtrl = frmMainGIForm.FindControl_Recursive(frmMainGIForm.)
+                FoundCtrl = frmMainGIForm.FindControls(FormName & frmMainGIForm.ControlPanelIdx, "", CStr(NewTAGNumber), ChildCtrl)
+                If FoundCtrl IsNot Nothing Then
+                    'put value into control:
+                    frmMainGIForm.InsertValueIntoForm(FormName & frmMainGIForm.ControlPanelIdx, FoundCtrl.Name, strResult)
+                    'Insert into Dic_Controls:
+                    varKeyRef = strDeliveryDate & "_" & strDeliveryRef & "_" & NewTAGNumber 'WRONG DATE FORMAT - needs / not -
+                    ControlName = FoundCtrl.Name
+                    ControlTAG = CStr(NewTAGNumber)
+                    ControlText = strResult
+
+                    ControlLeft = FoundCtrl.Left
+                    ControlTop = FoundCtrl.Top
+                    ControlWidth = FoundCtrl.Width
+                    ControlHeight = FoundCtrl.Height
+                    ControlOBJCount = NewTAGNumber
+                    'LOAD FROM DATABASE TABLE tblLAbourHours:
+                    If GetMYValuebyFieldname(AllValues, AllFields, "Start_TAGID") > 0 Then
+                        OpStartTAG = GetMYValuebyFieldname(AllValues, AllFields, "Start_TAGID")
+                    Else
+                        OpStartTAG = LowerTAG(4)
+                    End If
+                    If GetMYValuebyFieldname(AllValues, AllFields, "End_TAGID") > 0 Then
+                        OpFinishTAG = GetMYValuebyFieldname(AllValues, AllFields, "End_TAGID")
+                    Else
+                        OpFinishTAG = UpperTAG(4)
+                    End If
+
+                    tempTotals.OpStartTAG = OpStartTAG
+                    tempTotals.OpFinishTAG = OpFinishTAG
+                    tempTotals.Total_Operatives = OpTotalRows
+
+                    dtDeliveryDate = CDate(strDeliveryDate)
+                    strDeliveryDate = dtDeliveryDate.ToString("dd/MM/yyyy")
+                    'The following adds an incorect property item to the dic_controls - due to the DeliveryDate being wrong format:
+                    ' - Amended. check again.
+                    dic_Totals(strDeliveryDate & "_" & strDeliveryRef) = tempTotals
+
+                    ControlStartTAG = CStr(OpStartTAG)
+                    ControlEndTAG = CStr(OpFinishTAG)
+                    ControlRowNumber = 0
+
+                    'OpTotalRows = GetMYValuebyFieldname(AllValues, AllFields, "Total_Rows")
+                    If OpTotalRows > 0 Then
+                        tempTotals.Total_Operatives = OpTotalRows
+                        dic_Totals(strDeliveryDate & "_" & strDeliveryRef) = tempTotals
+                    End If
+                    ListArray = Nothing
+                    ControlBACKCOLOUR = System.Drawing.ColorTranslator.ToWin32(FoundCtrl.BackColor)
+                    ControlForeColor = System.Drawing.ColorTranslator.ToWin32(FoundCtrl.ForeColor)
+                    ControlFontName = FoundCtrl.Font.Name
+                    ControlFontSize = FoundCtrl.Font.Size
+                    If FoundCtrl.Font.Bold Then
+                        ControlFontStyle = "BOLD"
+                    Else
+                        ControlFontStyle = "NORMAL"
+                    End If
+                    If FoundCtrl.Font.Italic Then
+                        ControlFontStyle = ControlFontStyle & "," & "ITALIC"
+                    End If
+                    If FoundCtrl.Font.Underline Then
+                        ControlFontStyle = ControlFontStyle & "," & "UNDERLINE"
+                    End If
+                    If FoundCtrl.Font.Strikeout Then
+                        ControlFontStyle = ControlFontStyle & "," & "STRIKEOUT"
+                    End If
+                    If TypeOf (FoundCtrl) Is TextBox Then
+                        NewTextBox = DirectCast(FoundCtrl, System.Windows.Forms.TextBox)
+                        If NewTextBox.TextAlign = HorizontalAlignment.Left Then
+                            ControlTextAlign = "LEFT"
+                        ElseIf NewTextBox.TextAlign = HorizontalAlignment.Center Then
+                            ControlTextAlign = "CENTER"
+                        ElseIf NewTextBox.TextAlign = HorizontalAlignment.Right Then
+                            ControlTextAlign = "RIGHT"
+                        Else
+                            ControlTextAlign = ""
+                        End If
+                    End If
+                    If IsNumeric(ReturnValue) And Len(ReturnValue) > 0 Then
+                        ControlPrimaryKey = CLng(ReturnValue)
+                    End If
+                    'set tempControl to clsControls then can use tempControl.ControlTag = "48", tempControl.ControlFontStyle = "BOLD" etc. and just pass tempControl
+                    NewIndex = AddNewControl(False, Frame_FLMDetails, DBTables(3), ControlFieldname, "ID", FoundCtrl, ControlName,
+                    ControlText, ControlType, ControlTAG, ControlTABIndex, ControlDate, ControlLeft, ControlTop,
+                    ControlWidth, ControlHeight, ControlDeliveryDate, ControlDeliveryRef,
+                                             frmMainGIForm.myEmpNo, frmMainGIForm.myUsername, frmMainGIForm.myName, ControlASN,
+                    ControlOBJCount, ControlStartTAG, ControlEndTAG, ControlRowNumber, ControlTotalRows,
+                                            True, ListArray, ControlBACKCOLOUR, False, ControlFontName, ControlFontSize,
+                    ControlFontStyle, ControlForeColor, ControlTextAlign, "MIDDLE CENTER", False, False, dtStartTime, dtEndTime, ControlPrimaryKey)
+                End If
+                FieldIDX = FieldIDX + 1
+                TagNumber = TagNumber + 1
+            Loop
+        Else
+            'NO FLM record so INSERT NEW FLM Details Record into tblLabourHours:
+            ControlTABIndex = 33
+            Call InsertFLMButtons(False, Frame_FLMDetails, strDeliveryDate, strDeliveryRef, ControlASN, "", FLMName, dtStartTime, dtEndTime, ControlTABIndex)
+
+        End If
+
+        '*************************************
+        'LOAD tblOperatives:
+        '*************************************
+
+        AllValues = Nothing
+        AllFields = Nothing
+        SortFields = ""
+        Reversed = False
+        ErrMessage = ""
+        SearchCriteria = ""
+        SearchField = "DELIVERYREFERENCE"
+        SearchText = strDeliveryRef
+        FieldType = "String"
+        ReturnField = "ID"
+        ReturnValue = ""
+        FieldIDX = 4
+
+        ControlRowNumber = 1
+        If OpStartTAG = 0 Then
+            OpStartTAG = LowerTAG(4)
+        End If
+        TagNumber = OpStartTAG
+        ControlStartTAG = CStr(TagNumber)
+        ExtractTotals = dic_Totals(strDeliveryDate & "_" & strDeliveryRef)
+        ControlTotalRows = OpTotalRows
+        StartControlTABIndex = ExtractTotals.HighestOpTabIndex
+        ControlTABIndex = StartControlTABIndex
+
+        'Need to populate ControlPrimaryKey for EACH Operative row - in each txtOpRow: :
+
+        Do While ControlRowNumber <= OpTotalRows
+            SearchCriteria = "FrameRowNumber = " & ControlRowNumber
+
+            LoadedOK(4) = Find_myQuery(frmMainGIForm.myConnString, DBTables(4), SearchField, SearchText, FieldType, ReturnField, ReturnValue, AllValues,
+                                   AllFields, SearchCriteria, SortFields, Reversed, ErrMessage)
+            If LoadedOK(4) Then
+                'tblOperatives: - extract Operative info and using some of the previous info from tblLaourHours - totalrows and starttag and endtag.
+                If Len(ReturnValue) > 0 And IsNumeric(ReturnValue) Then
+                    OpPrimaryKey = CLng(ReturnValue)
+                End If
+                TimeTagNumber = 0
+                ControlFieldname = AllFields(FieldIDX)
+                OpName = GetMYValuebyFieldname(AllValues, AllFields, "Op_Name")
+                OpActivity = GetMYValuebyFieldname(AllValues, AllFields, "Activity_Name")
+                OpComments = GetMYValuebyFieldname(AllValues, AllFields, "OpComments")
+                strResult = GetMYValuebyFieldname(AllValues, AllFields, "Op_StartTime")
+                ErrMessage = "1) CONTROL FIELDNAME = " & ControlFieldname
+                frmMainGIForm.logger.LogError("OpProperties", Application.StartupPath, ErrMessage, "PopulateControls()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR LOGGED IN:" & frmMainGIForm.myUsername)
+                ErrMessage = "2) CONTROL VALUE = " & strResult
+                frmMainGIForm.logger.LogError("OpProperties", Application.StartupPath, ErrMessage, "PopulateControls()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR LOGGED IN:" & frmMainGIForm.myUsername)
+                DisableOpStartButton = False
+                DisableOpFinishButton = False
+                If IsDate(strResult) Then
+                    dtStartTime = CDate(strResult)
+                    If dtStartTime > CDate("1970-01-01") Then
+                        DisableOpStartButton = True
+                        If UCase(frmMainGIForm.myAccessRights) = "ADMIN" Or
+                                UCase(frmMainGIForm.myAccessRights) = "SUPER" Then
+                            DisableOpStartEntry = False
+                        End If
+                    End If
+                Else
+                    dtStartTime = CDate("1970-01-01 01:00:00")
+                End If
+                strResult = GetMYValuebyFieldname(AllValues, AllFields, "Op_FinishTime")
+                If IsDate(strResult) Then
+                    dtEndTime = CDate(strResult)
+                    If dtEndTime > CDate("1970-01-01") Then
+                        DisableOpFinishButton = True
+                        If UCase(frmMainGIForm.myAccessRights) = "ADMIN" Or
+                                UCase(frmMainGIForm.myAccessRights) = "SUPER" Then
+                            DisableOpFinishEntry = False
+                        End If
+                    End If
+                Else
+                    dtEndTime = CDate("1970-01-01 01:00:00")
+                End If
+                'LastRow is the ONLY place used here - but the operative record seems to load in still ok ????
+                'it does trigger off a few odd values - like totalrows = -1 etc.
+                'LastRow ??????? should be TotalRows here :
+
+                'IF OpNAME or OpActivity etc is BLANK - dont SAVE IT !
+
+                InsertOperatives(False, strDeliveryDate, strDeliveryRef, ControlASN, Frame_Operatives, ControlRowNumber, 400, OpStartTAG, TotalControlsInFrame(4),
+                                 FieldIDX, OpName, OpActivity, dtStartTime, dtEndTime, OpComments, ControlTABIndex, True,
+                                 DisableOpStartButton, DisableOpFinishButton, DisableOpStartEntry, DisableOpFinishEntry)
+
+                Do While FieldIDX <= 9
+                    'TagNumber = TagNumber + 1
+                    TimeTagNumber = 0
+                    ControlTAG = CStr(TagNumber)
+                    ControlFieldname = AllFields(FieldIDX)
+                    strResult = GetMYValuebyFieldname(AllValues, AllFields, ControlFieldname)
+                    If UCase(ControlFieldname) = UCase("Op_StartTime") Then
+                        TimeTagNumber = TagNumber + 400
+                        ControlTAG = CStr(TimeTagNumber)
+                        ControlType = "TEXTBOX"
+                        dtStartTime = CDate(strResult)
+                        strResult = dtStartTime.ToString("HH:mm:ss")
+                        OpStartTime = strResult
+                    End If
+                    If UCase(ControlFieldname) = UCase("Op_FinishTime") Then
+                        TimeTagNumber = TagNumber + 400
+                        ControlTAG = CStr(TimeTagNumber)
+                        ControlType = "TEXTBOX"
+                        dtEndTime = CDate(strResult)
+                        strResult = dtEndTime.ToString("HH:mm:ss")
+                        OpEndTime = strResult
+                    End If
+                    If TimeTagNumber > 0 Then
+                        FoundCtrl = frmMainGIForm.FindControls(FormName & frmMainGIForm.ControlPanelIdx, "", CStr(TimeTagNumber), ChildCtrl)
+                    Else
+                        FoundCtrl = frmMainGIForm.FindControls(FormName & frmMainGIForm.ControlPanelIdx, "", CStr(TagNumber), ChildCtrl)
+                    End If
+                    If FoundCtrl IsNot Nothing Then
+                        frmMainGIForm.InsertValueIntoForm(FormName & frmMainGIForm.ControlPanelIdx, FoundCtrl.Name, strResult)
+                        strResult = GetMYValuebyFieldname(AllValues, AllFields, ControlFieldname)
+                        'Find correct field to put value into now.
+                        'ControlTAG = cstr(TagNumber)
+
+                        If UCase(ControlFieldname) = UCase("FrameRowNumber") Then
+                            ControlType = "TEXTBOX"
+                        End If
+                        If UCase(ControlFieldname) = UCase("Op_Name") Then
+                            ControlType = "COMBOBOX"
+                            If Len(strResult) > 0 Then
+                                OpName = strResult
+                            End If
+                        End If
+                        If UCase(ControlFieldname) = UCase("Activity_Name") Then
+                            ControlType = "COMBOBOX"
+                            If Len(strResult) > 0 Then
+                                OpActivity = strResult
+
+                            End If
+                        End If
+                        If UCase(ControlFieldname) = UCase("OpComments") Then
+                            ControlType = "TEXTBOX"
+                        End If
+
+                        ControlText = strResult
+                        'put value into control:
+
+                        'Insert into Dic_Controls:
+
+                        varKeyRef = strDeliveryDate & "_" & strDeliveryRef & "_" & TagNumber 'not correct if Time is the field  - not adding 400.
+                        ControlName = FoundCtrl.Name
+                        'ControlTAG = CStr(TagNumber)
+                        ControlText = strResult
+                        ControlLeft = FoundCtrl.Left
+                        ControlTop = FoundCtrl.Top
+                        ControlWidth = FoundCtrl.Width
+                        ControlHeight = FoundCtrl.Height
+                        ControlOBJCount = TagNumber ' will record 46 rather than 446 for the time.
+                        ControlStartTAG = CStr(OpStartTAG)
+                        ControlEndTAG = CStr(OpFinishTAG)
+                        'ControlStartTAG = CStr(OpStartTAG)
+                        'ControlEndTAG = CStr(OpFinishTAG)
+                        'OpTotalRows = GetMYValuebyFieldname(AllValues, AllFields, "Total_Rows")
+                        ListArray = Nothing
+                        ControlBACKCOLOUR = System.Drawing.ColorTranslator.ToWin32(FoundCtrl.BackColor)
+                        ControlForeColor = System.Drawing.ColorTranslator.ToWin32(FoundCtrl.ForeColor)
+                        ControlFontName = FoundCtrl.Font.Name
+                        ControlFontSize = FoundCtrl.Font.Size
+                        If FoundCtrl.Font.Bold Then
+                            ControlFontStyle = "BOLD"
+                        Else
+                            ControlFontStyle = "NORMAL"
+                        End If
+                        If FoundCtrl.Font.Italic Then
+                            ControlFontStyle = ControlFontStyle & "," & "ITALIC"
+                        End If
+                        If FoundCtrl.Font.Underline Then
+                            ControlFontStyle = ControlFontStyle & "," & "UNDERLINE"
+                        End If
+                        If FoundCtrl.Font.Strikeout Then
+                            ControlFontStyle = ControlFontStyle & "," & "STRIKEOUT"
+                        End If
+                        If TypeOf (FoundCtrl) Is TextBox Then
+                            NewTextBox = DirectCast(FoundCtrl, System.Windows.Forms.TextBox)
+                            If NewTextBox.TextAlign = HorizontalAlignment.Left Then
+                                ControlTextAlign = "LEFT"
+                            ElseIf NewTextBox.TextAlign = HorizontalAlignment.Center Then
+                                ControlTextAlign = "CENTER"
+                            ElseIf NewTextBox.TextAlign = HorizontalAlignment.Right Then
+                                ControlTextAlign = "RIGHT"
+                            Else
+                                ControlTextAlign = ""
+                            End If
+                        End If
+
+                        NewIndex = AddNewControl(False, Frame_Operatives, DBTables(4), ControlFieldname, "ID", FoundCtrl, ControlName,
+                            ControlText, ControlType, ControlTAG, ControlTABIndex, ControlDate, ControlLeft, ControlTop,
+                            ControlWidth, ControlHeight, ControlDeliveryDate, ControlDeliveryRef,
+                                                 frmMainGIForm.myEmpNo, frmMainGIForm.myUsername, frmMainGIForm.myName, ControlASN,
+                            ControlOBJCount, ControlStartTAG, ControlEndTAG, ControlRowNumber, ControlTotalRows,
+                                        True, ListArray, ControlBACKCOLOUR, False, ControlFontName, ControlFontSize,
+                            ControlFontStyle, ControlForeColor, ControlTextAlign, "MIDDLE CENTER", False, False, dtStartTime, dtEndTime,
+                                                 OpPrimaryKey)
+                    End If 'FoundCtrl
+                    FieldIDX = FieldIDX + 1
+                    TagNumber = TagNumber + 1
+                    ControlTABIndex = ControlTABIndex + 1
+
+                Loop
+                'TagNumber = TagNumber + 1
+                'reset fieldidx back to 4 for NEXT iteration - due to StartFieldIDX becomming 10 and therefore issuing WRONG FIELDNAMES !!!
+                'fieldIDX = 4
+                frmMainGIForm.InsertValueIntoForm(FormName & frmMainGIForm.ControlPanelIdx, "txtTotalOps", CStr(ControlRowNumber))
+            Else
+                'Create the blank Operatives here:
+                'STILL WITHIN LOOP
+            End If
+
+            ControlRowNumber = ControlRowNumber + 1
+        Loop
+        If OpTotalRows = 0 Then
+            InsertOperatives(True, strDeliveryDate, strDeliveryRef, ControlASN, Frame_Operatives, ControlRowNumber, 400, OpStartTAG, TotalControlsInFrame(4),
+                                 FieldIDX, OpName, OpActivity, dtStartTime, dtEndTime, OpComments, ControlTABIndex)
+            'Now Populate the ControlPrimaryKey here:
+            'Load the first record just created.
+            'Get the RecordID.
+            'use UpdateControls().
+            SearchCriteria = "FrameRowNumber = " & ControlRowNumber
+            OpLoadedOK = Find_myQuery(frmMainGIForm.myConnString, DBTables(4), SearchField, SearchText, FieldType, ReturnField, ReturnValue, AllValues,
+                                   AllFields, SearchCriteria, SortFields, Reversed, ErrMessage)
+            If OpLoadedOK Then
+                'Need TAG number or control name to insert primary key value into Dic_Controls():
+                '************** OK we have the NewFrameRowNumber - just need to pick a control name to alter: *****************
+                ControlName = "txtOpRow:" & CStr(ControlRowNumber)
+                OpControl = frmMainGIForm.FindFrameControls(FormName & frmMainGIForm.ControlPanelIdx, ControlName)
+                If OpControl IsNot Nothing Then
+                    ChangeProperty = "PRIMARYKEY"
+                    testCollection = UpdateCollection(dic_Controls, Nothing, ReturnValue, CDate(strDeliveryDate), "",
+                                                          strDeliveryRef, OpControl.Tag, ChangeProperty)
+
+                    If testCollection IsNot Nothing Then
+                        dic_Controls = testCollection
+                    End If
+                End If
+            End If
+        End If
+
+        'Insert Short Parts Rows :
+        SortFields = ""
+        Reversed = False
+        ErrMessage = ""
+        ShortOrExtra = "SHORT"
+        SearchCriteria = "ShortOrExtra = " & Chr(34) & ShortOrExtra & Chr(34)
+        LoadedOK(5) = Find_myQuery(frmMainGIForm.myConnString, DBTables(5), SearchField, SearchText, FieldType, ReturnField, ReturnValue, AllValues,
+                                   AllFields, SearchCriteria, SortFields, Reversed, ErrMessage)
+        If LoadedOK(5) Then
+            If Len(ReturnValue) > 0 And IsNumeric(ReturnValue) Then
+                ShortPrimaryKey = CLng(ReturnValue)
+            End If
+            ControlRowNumber = 1
+            ShortTotalRows = GetMYValuebyFieldname(AllValues, AllFields, "TotalRows")
+            ControlStartTAG = GetMYValuebyFieldname(AllValues, AllFields, "Start_TAGID")
+            ControlEndTAG = GetMYValuebyFieldname(AllValues, AllFields, "End_TAGID")
+
+            tempTotals.Total_ShortParts = ShortTotalRows
+            tempTotals.HighestShortTAGID = ControlEndTAG
+            dic_Totals(strDeliveryDate & "_" & strDeliveryRef) = tempTotals
+            tempTotals = dic_Totals(strDeliveryDate & "_" & strDeliveryRef)
+            If Not tempTotals Is Nothing Then
+                StartControlTABIndex = tempTotals.HighestShortTABIndex
+            Else
+                StartControlTABIndex = 1001
+            End If
+            ControlTABIndex = StartControlTABIndex
+
+            If IsNumeric(ControlStartTAG) Then
+                TagNumber = CLng(ControlStartTAG)
+            Else
+                TagNumber = 1001
+            End If
+            ControlStartTAG = CStr(TagNumber)
+            ControlTotalRows = ShortTotalRows
+            Do While ControlRowNumber <= ShortTotalRows
+                SearchCriteria = "ShortOrExtra = " & Chr(34) & ShortOrExtra & Chr(34)
+                SearchCriteria = SearchCriteria & " AND FrameRowNumber = " & ControlRowNumber
+                LoadedOK(5) = Find_myQuery(frmMainGIForm.myConnString, DBTables(5), SearchField, SearchText, FieldType, ReturnField, ReturnValue, AllValues,
+                                       AllFields, SearchCriteria, SortFields, Reversed, ErrMessage)
+                If LoadedOK(5) Then
+                    'tblshortsandextraparts: - extract Operative info and using some of the previous info from tblLaourHours - totalrows and starttag and endtag.
+                    FieldIDX = 4
+                    ShortPartNo = GetMYValuebyFieldname(AllValues, AllFields, "PartNo")
+                    ShortQty = GetMYValuebyFieldname(AllValues, AllFields, "Qty")
+                    If IsNumeric(ShortQty) Then
+                        intShortQty = CLng(ShortQty)
+                    Else
+                        intShortQty = 0
+                    End If
+                    InsertShortParts(False, strDeliveryDate, strDeliveryRef, ControlASN, Frame_Short_Parts, ControlRowNumber, 1000,
+                                     ControlStartTAG, 3, FieldIDX, ShortPartNo, intShortQty, ControlTABIndex)
+                    frmMainGIForm.InsertValueIntoForm(FormName & frmMainGIForm.ControlPanelIdx, "txtTotalShorts", CStr(ControlRowNumber))
+                    'what about using TotalShorts ???
+                Else
+                    'Cannot Find record:
+
+                End If 'If the current numbered row exists
+                ControlRowNumber = ControlRowNumber + 1
+            Loop
+            tempTotals = dic_Totals(strDeliveryDate & "_" & strDeliveryRef)
+            tempTotals.HighestShortTABIndex = ControlTABIndex
+            dic_Totals(strDeliveryDate & "_" & strDeliveryRef) = tempTotals
+        End If 'IF any rows exist in tblShortsAndExtraParts WHERE ShortORExtra = Short
+
+        'INSERT EXTRA PARTS ROWS:
+        SortFields = ""
+        Reversed = False
+        ErrMessage = ""
+        ShortOrExtra = "EXTRA"
+        SearchCriteria = "ShortOrExtra = " & Chr(34) & ShortOrExtra & Chr(34)
+        LoadedOK(6) = Find_myQuery(frmMainGIForm.myConnString, DBTables(6), SearchField, SearchText, FieldType, ReturnField, ReturnValue, AllValues,
+                                   AllFields, SearchCriteria, SortFields, Reversed, ErrMessage)
+        If LoadedOK(6) Then
+            If Len(ReturnValue) > 0 And IsNumeric(ReturnValue) Then
+                ExtraPrimaryKey = CLng(ReturnValue)
+            End If
+            ControlRowNumber = 1
+            ExtraTotalRows = GetMYValuebyFieldname(AllValues, AllFields, "TotalRows")
+            ControlStartTAG = GetMYValuebyFieldname(AllValues, AllFields, "Start_TAGID")
+            ControlEndTAG = GetMYValuebyFieldname(AllValues, AllFields, "End_TAGID")
+
+            tempTotals.Total_ExtraParts = ExtraTotalRows
+            tempTotals.HighestExtraTAGID = ControlEndTAG
+            dic_Totals(strDeliveryDate & "_" & strDeliveryRef) = tempTotals
+
+            tempTotals = dic_Totals(strDeliveryDate & "_" & strDeliveryRef)
+            If Not tempTotals Is Nothing Then
+                StartControlTABIndex = tempTotals.HighestExtraTABIndex
+            Else
+                StartControlTABIndex = 2001
+            End If
+            ControlTABIndex = StartControlTABIndex
+
+            If IsNumeric(ControlStartTAG) Then
+                TagNumber = CLng(ControlStartTAG)
+            Else
+                TagNumber = 2001
+            End If
+            ControlStartTAG = CStr(TagNumber)
+            ControlTotalRows = ExtraTotalRows
+            Do While ControlRowNumber <= ExtraTotalRows
+                SearchCriteria = "ShortOrExtra = " & Chr(34) & ShortOrExtra & Chr(34)
+                SearchCriteria = SearchCriteria & " AND FrameRowNumber = " & ControlRowNumber
+                LoadedOK(6) = Find_myQuery(frmMainGIForm.myConnString, DBTables(6), SearchField, SearchText, FieldType, ReturnField, ReturnValue,
+                                           AllValues, AllFields, SearchCriteria, SortFields, Reversed, ErrMessage)
+                If LoadedOK(6) Then
+                    'tblshortsandextraparts: - extract Operative info and using some of the previous info from tblLaourHours - totalrows and starttag and endtag.
+                    FieldIDX = 4
+                    ExtraPartNo = GetMYValuebyFieldname(AllValues, AllFields, "PartNo")
+                    ExtraQty = GetMYValuebyFieldname(AllValues, AllFields, "Qty")
+                    If IsNumeric(ExtraQty) Then
+                        intExtraQty = CLng(ExtraQty)
+                    Else
+                        intExtraQty = 0
+                    End If
+
+                    InsertExtraParts2(False, strDeliveryDate, strDeliveryRef, ControlASN, Frame_Extra_Parts, ControlRowNumber, 2000,
+                                      ControlStartTAG, 3, FieldIDX, ExtraPartNo, intExtraQty, ControlTABIndex,)
+                    frmMainGIForm.InsertValueIntoForm(FormName & frmMainGIForm.ControlPanelIdx, "txtTotalExtras", CStr(ControlRowNumber))
+
+                Else
+                    'Not found record:
+
+                End If 'If the current numbered row exists
+                ControlRowNumber = ControlRowNumber + 1
+            Loop
+            tempTotals = dic_Totals(strDeliveryDate & "_" & strDeliveryRef)
+            If Not tempTotals Is Nothing Then
+                tempTotals.HighestExtraTABIndex = ControlTABIndex
+            Else
+                tempTotals.HighestExtraTABIndex = 2001
+            End If
+            dic_Totals(strDeliveryDate & "_" & strDeliveryRef) = tempTotals
+        End If 'IF any rows exist in tblShortsAndExtraParts WHERE ShortORExtra = Extra
+
+        'CATCH
+
+        'END TRY
+
+    End Sub
+	

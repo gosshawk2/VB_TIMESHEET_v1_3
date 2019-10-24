@@ -1,0 +1,142 @@
+Sub UpdateMySession(ByVal connString As String, ByVal UserID As String, ByVal Username As String,
+                    ByVal ComputerName As String, ByVal IPv4Addr As String, ByVal IPv6Addr As String,
+                    ByVal SessionID As String, ByVal AccessRights As String, ByVal LogOutDate As String,
+                    ByVal IsLoggedIn As String, ByVal LoggedInDuration As String, ByVal Criteria As String, ByRef MyMessage As String,
+                      Optional ByRef MyOpsMessage As String = "")
+
+
+        Dim ConnMessage As String = ""
+        Dim DBTable As String = ""
+        Dim FieldValues As String = ""
+        Dim FieldNames As String = ""
+        Dim ExcludeFields As String = ""
+        Dim strComputerName As String = ""
+        Dim strIP4Addr As String = ""
+        Dim strIP6Addr As String = ""
+        Dim strGUID As String = ""
+        Dim strSessionID As String = ""
+        Dim strAccessRights As String = ""
+        Dim strUsername As String = ""
+        Dim strDateLoggedIn As String = ""
+        Dim strDateLoggedOut As String = ""
+        Dim strUserID As String = ""
+        Dim strIsLoggedIn As String = ""
+        Dim strLoggedInDuration As String = ""
+        Dim OpsDBTable As String = ""
+        Dim OpsFieldnames As String = ""
+        Dim OpsExcludeFields As String = ""
+        Dim OpsFieldValues As String = ""
+        Dim OpsCriteria As String = ""
+        Dim dtMinutesDiff As Long = 0
+        Dim dtDateLoggedIn As DateTime
+        Dim dtDateLoggedOut As DateTime
+        Dim strHours As String = ""
+        Dim strMins As String = ""
+        Dim SearchField As String = ""
+        Dim SearchText As String = ""
+        Dim ReturnField As String = ""
+        Dim ReturnValue As String = ""
+        Dim OpSearchCriteria As String = ""
+        Dim OpMessage As String = ""
+        Dim OnlineTable As String = ""
+        Dim strConnectionString As String = ""
+        Dim OpDeleteCriteria As String = ""
+        Dim IsUpdatedOK As Boolean = False
+        Dim IsOpsUpdatedOK As Boolean = False
+        Dim FoundSessionID As Boolean = False
+        Dim DeletedOK As Boolean = False
+        Dim AllFieldNames As String() = Nothing
+        Dim AllFieldValues As Object() = Nothing
+        Dim DecMinutes As Decimal = 0.0
+        Dim DecHours As Decimal = 0.0
+        Dim dblTotalTime As Double
+        Dim intHours As Integer
+        Dim SPAN As TimeSpan
+
+        DBTable = "tblSessions"
+        OpsDBTable = "tblOperators"
+        OnlineTable = "tblOperatorsOnline"
+        strUserID = UserID
+        strUsername = Username
+        strComputerName = ComputerName
+        strIP4Addr = IPv4Addr
+        strIP6Addr = IPv6Addr
+        strSessionID = SessionID
+        strAccessRights = AccessRights
+        strIsLoggedIn = IsLoggedIn
+        strDateLoggedOut = LogOutDate
+
+        OpDeleteCriteria = "SessionID = " & Chr(39) & strSessionID & Chr(39)
+        If Len(connString) > 0 Then
+            strConnectionString = connString
+        Else
+            strConnectionString = frmMainGIForm.myConnString
+        End If
+        strHours = "0"
+        strMins = "0"
+        strLoggedInDuration = "0 mins"
+        strDateLoggedOut = CStr(Now())
+        SearchField = "SessionID"
+        SearchText = strSessionID
+        ReturnField = "LogInDateTime"
+        'Find logindate from tblSessions
+        FoundSessionID = Find_myQuery(strConnectionString, DBTable, SearchField, SearchText, "STRING", ReturnField, ReturnValue, AllFieldValues, AllFieldNames, OpSearchCriteria, "", False, OpMessage)
+        If Len(OpMessage) > 0 Then
+            frmMainGIForm.logger.LogError("GI_Error_v1_3.log", Application.StartupPath, OpMessage, "UpdateSession()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR Logged in:" & frmMainGIForm.myUsername)
+        End If
+        If FoundSessionID Then
+            strDateLoggedIn = ReturnValue
+            dtDateLoggedIn = CDate(strDateLoggedIn)
+            dtDateLoggedOut = CDate(strDateLoggedOut)
+            SPAN = dtDateLoggedOut.Subtract(dtDateLoggedIn)
+            dtMinutesDiff = DateDiff(DateInterval.Minute, dtDateLoggedIn, dtDateLoggedOut)
+            DecHours = Math.Abs(dtMinutesDiff) / 60
+            DecMinutes = Math.Abs(dtMinutesDiff) Mod 60
+            If DecHours < 1 Then
+                strHours = "0"
+            Else
+                Dim theRounded = Math.Sign(DecHours) * Math.Floor(Math.Abs(DecHours) * 100) / 100.0
+                intHours = CInt(theRounded)
+                strHours = CStr(intHours)
+                'hmmm hours still ending up as 1.34 and 5.6 etc.
+            End If
+            strMins = CStr(DecMinutes)
+
+            strLoggedInDuration = SPAN.Hours & "h " & SPAN.Minutes & "m " & SPAN.Seconds & "s "
+
+        End If
+
+        'OpsCriteria = "Username = " & Chr(39) & strUsername & Chr(39)
+        OpsCriteria = "SessionID = " & Chr(39) & strSessionID & Chr(39)
+        FieldNames = "LogOffDateTime,LogInDateTime,IsLoggedIn,LoggedInDuration"
+        OpsFieldnames = "IsLoggedIn,SessionID"
+        ExcludeFields = ""
+        OpsExcludeFields = "ID,UserID,Username,Firstname,Lastname,EmpNo,DateCreated,Comments,AccessRights"
+        FieldValues = dtDateLoggedOut & "," & dtDateLoggedIn & "," & strIsLoggedIn & "," & strLoggedInDuration
+
+        IsUpdatedOK = InsertUpdateRecords_Using_Parameters(strConnectionString, True, "", DBTable, FieldNames, FieldValues, OpsCriteria,
+                                                           ExcludeFields, MyMessage, False, ",")
+        If Not IsUpdatedOK Then
+            frmMainGIForm.logger.LogError("GI_Error_v1_3.log", Application.StartupPath, MyMessage, "UpdateSession()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR Logged in:" & frmMainGIForm.myUsername)
+        End If
+        'UPDATE tblOperators with Logged In info:
+        OpsFieldValues = strIsLoggedIn & "," & strSessionID
+        IsOpsUpdatedOK = InsertUpdateRecords_Using_Parameters(strConnectionString, True, "", OpsDBTable, OpsFieldnames, OpsFieldValues, OpsCriteria,
+                                                              OpsExcludeFields, MyOpsMessage, False, ",")
+        If Not IsOpsUpdatedOK Then
+            frmMainGIForm.logger.LogError("GI_Error_v1_3.log", Application.StartupPath, MyOpsMessage, "UpdateSession()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR Logged in:" & frmMainGIForm.myUsername)
+        End If
+
+        'REMOVE THE OPERATOR FROM THE OperatorsOnline table:
+        DeletedOK = DeleteMyRecord(OnlineTable, strConnectionString, OpDeleteCriteria, MyMessage)
+        If DeletedOK = True Then
+            'Me.txtMessages.AppendText(vbCrLf & " *Entry moved to History: " & strAssetName)
+            frmMainGIForm.logger.LogMessage("GI_Error_v1_3.log", Application.StartupPath, "User Logged Out: " & frmMainGIForm.myUsername, frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address())
+            frmMainGIForm.logger.LogError("GI_Error_v1_3.log", Application.StartupPath, "User Logged Out: " & frmMainGIForm.myUsername, "UpdateSession()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR Logged OUT:" & frmMainGIForm.myUsername)
+        Else
+            frmMainGIForm.logger.LogError("GI_Error_v1_3.log", Application.StartupPath, "Error Logging Out: " & MyMessage, "UpdateSession()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR Logged IN:" & frmMainGIForm.myUsername)
+        End If
+
+
+    End Sub
+	

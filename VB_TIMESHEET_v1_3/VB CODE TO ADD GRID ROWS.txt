@@ -1,0 +1,86 @@
+Sub ADD_ROW_TO_DATA_GRID_VIEW_OPERATIVES(dgv As Object, RowNum As Long, StartTAGNumber As Long, StartButtonTAG As Long)
+        Dim IDX As Int32
+        Dim btnStartTime As New DataGridViewButtonColumn()
+        Dim btnEndTime As New DataGridViewButtonColumn()
+        Dim cmbName As New DataGridViewComboBoxColumn()
+        Dim cmbActivity As New DataGridViewComboBoxColumn()
+
+        Dim txtRow As New DataGridViewTextBoxColumn()
+        Dim txtStartTime As New DataGridViewTextBoxColumn()
+        Dim txtEndTime As New DataGridViewTextBoxColumn()
+        Dim txtComments As New DataGridViewTextBoxColumn()
+
+        dgv.ColumnCount = 8
+
+        txtRow.HeaderText = "#"
+        txtRow.Name = "OpRow"
+        txtRow.Tag = StartTAGNumber
+
+        txtRow.Visible = True
+
+        cmbName.HeaderText = "Select Employee"
+        cmbName.Name = "cmbEmployee"
+        cmbName.MaxDropDownItems = 100
+        cmbName.Tag = StartTAGNumber + 1
+        cmbName.Items.Add("Richard Stilgo")
+        cmbName.Visible = True
+
+        cmbActivity.HeaderText = "Select Activity"
+        cmbActivity.Name = "cmbActivity"
+        cmbActivity.MaxDropDownItems = 11
+        cmbActivity.Tag = StartTAGNumber + 2
+        cmbActivity.Items.Add("Johnny Ball")
+        cmbActivity.Visible = True
+
+        btnStartTime.HeaderText = "Start Time"
+        btnStartTime.Name = "btnStartTime"
+        btnStartTime.Text = "@S"
+        btnStartTime.Tag = "btn" & CStr(StartButtonTAG)
+        btnStartTime.Visible = True
+
+        txtStartTime.HeaderText = "Start Time"
+        txtStartTime.Name = "txtStartTime"
+        txtStartTime.Tag = StartButtonTAG + 3 + 400
+        txtStartTime.Visible = True
+
+        btnEndTime.HeaderText = "End Time"
+        btnEndTime.Name = "btnEndTime"
+        btnEndTime.Text = "@F"
+        btnEndTime.Tag = "btn" & CStr(StartButtonTAG + 1)
+        btnEndTime.Visible = True
+
+        txtEndTime.HeaderText = "End Time"
+        txtEndTime.Name = "txtEndTime"
+        txtEndTime.Tag = StartButtonTAG + 4 + 400
+        txtEndTime.Visible = True
+
+        txtComments.HeaderText = "Total Time"
+        txtComments.Name = "txtTotalTime"
+        txtComments.Tag = StartTAGNumber + 5
+        txtComments.Visible = True
+
+
+        'This ADDS physical COLUMNS to an existing GRID.
+
+        dgv.columns.add(txtRow)
+        dgv.columns.add(cmbName)
+        dgv.columns.add(cmbActivity)
+        dgv.columns.add(btnStartTime)
+        dgv.columns.add(txtStartTime)
+        dgv.columns.add(btnEndTime)
+        dgv.columns.add(txtEndTime)
+        dgv.columns.add(txtComments)
+        dgv.visible = True
+        'This ADDS a DATA COLUMN to a dynamic grid based on a data table:
+        'DIM IDXCOl As DataColumn
+        'IDXCol = ds.Tables("srcTable").Columns.Add
+        'IDXCol.SetOrdinal(ButtonColumnPos)
+        'ds.Tables("srcTable").Rows(RowIDX)(ButtonColumnPos) = value
+
+
+        btnStartTime.UseColumnTextForButtonValue = True
+        btnEndTime.UseColumnTextForButtonValue = True
+
+
+    End Sub
+	

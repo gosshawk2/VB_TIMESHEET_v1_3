@@ -1,0 +1,119 @@
+Public Function FindMyChild(ByVal ReferenceNumber As String, Optional ByVal ASNNo As String = "", Optional GoToChild As Boolean = True,
+                                Optional ByRef Form_UniqueID As String = "",
+                                Optional ByRef ChildFormIDX As Integer = 0,
+                                Optional ByRef ChildName As String = "",
+                                Optional ByVal FormControl As String = "",
+                                Optional ByVal BackColor As String = "GREEN") As Boolean
+        'Dim MyChild As Form
+        Dim SearchField As String
+        Dim SearchValue As String
+        Dim FoundCtrl As Control
+        Dim idx As Integer
+        Dim ChildTAG As String
+        Dim Title As String
+        Dim FormField As String
+        Dim AllValues() As Object
+        Dim AllFields() As String
+        Dim SortFields As String
+        Dim Reversed As Boolean = False
+        Dim ErrMessage As String
+        Dim SearchCriteria As String
+        Dim FieldType As String
+        Dim SearchText As String
+        Dim ReturnField As String
+        Dim ReturnValue As String
+        Dim FoundASN As Boolean = False
+        Dim DBInfoTable As String = "tblDeliveryInfo"
+
+        FindMyChild = False
+        DBInfoTable = "tblDeliveryInfo"
+        If Application.OpenForms.Count = 0 Then Exit Function
+        For Each MyChild As Form In Application.OpenForms
+            If Len(ReferenceNumber) > 0 Then
+                SearchValue = ReferenceNumber
+                FormField = "comDeliveryRef"
+                FoundCtrl = FindControl(MyChild, FormField)
+            Else
+                SearchValue = ""
+                FormField = "comASNNo"
+                'FIND THE DELIVERY REFERENCE !
+                AllValues = Nothing
+                AllFields = Nothing
+                SortFields = "DeliveryDate"
+                Reversed = True
+                ErrMessage = ""
+                SearchCriteria = ""
+                SearchField = "ASN_Number"
+                SearchText = ASNNo
+                FieldType = "String"
+                ReturnField = "ID"
+                ReturnValue = ""
+
+                FoundASN = Find_myQuery(myConnString, DBInfoTable, SearchField, SearchText, FieldType, ReturnField, ReturnValue, AllValues,
+                                       AllFields, SearchCriteria, SortFields, Reversed, ErrMessage)
+                If FoundASN Then
+                    SearchValue = GetMYValuebyFieldname(AllValues, AllFields, "DeliveryReference")
+                    FoundCtrl = FindControl(MyChild, FormField)
+                End If
+
+            End If
+            Form_UniqueID = MyChild.Tag
+            For idx = 0 To MyChild.MdiChildren.Count - 1
+                ChildName = MyChild.MdiChildren(idx).Name
+                ChildTAG = MyChild.MdiChildren(idx).Tag
+                Title = MyChild.MdiChildren(idx).Text
+
+                If Len(FormControl) = 0 Then
+                    FoundCtrl = FindControl(MyChild.MdiChildren(idx), "comDeliveryRef")
+
+                    If FoundCtrl IsNot Nothing Then
+                        If InStr(FoundCtrl.Text, SearchValue) > 0 Then
+                            If GoToChild Then
+                                Application.OpenForms.Item(ChildName).Activate()
+                            End If
+                            ChildFormIDX = idx
+                            ControlPanelIdx = ChildTAG
+                            Application.DoEvents()
+                            FindMyChild = True
+                            Return True
+                            Exit Function
+                        End If
+                    End If
+                Else
+                    FoundCtrl = FindControl(MyChild.MdiChildren(idx), FormControl)
+
+                    If FoundCtrl IsNot Nothing Then
+                        'ControlBACKCOLOUR = System.Drawing.ColorTranslator.ToWin32(FoundCtrl.BackColor)
+                        If InStr(Title, SearchValue) > 0 Then
+                            If UCase(BackColor) = "GREEN" Then
+                                FoundCtrl.BackColor = Color.LimeGreen
+                            Else
+                                FoundCtrl.BackColor = Color.Red
+                            End If
+                            ChildFormIDX = idx
+                            ControlPanelIdx = ChildTAG
+                            Application.DoEvents()
+                            FindMyChild = True
+                            Return True
+                            Exit Function
+                        End If
+                    End If
+                End If
+            Next
+        Next
+    End Function
+	
+	Function Get_MDIChildForm(TheFormName As String) As Form
+        Dim frmName As String
+
+        Get_MDIChildForm = Nothing
+        For Each frm As Form In Application.OpenForms
+            If UCase(frm.Name) = UCase(TheFormName) Then
+                Get_MDIChildForm = frm
+                Exit For
+            End If
+        Next
+
+
+    End Function
+	

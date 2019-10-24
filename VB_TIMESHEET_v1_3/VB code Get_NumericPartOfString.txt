@@ -1,0 +1,23 @@
+Function Get_NumericPartOfString(TheString As String) As Long
+        Dim IDX As Long
+        Dim strPart As String
+        Dim strNumber As String = ""
+        Dim NumericPart As Long
+
+        NumericPart = 0
+        strPart = TheString
+        IDX = 1
+        Do While IDX <= Len(TheString)
+            If IsNumeric(Mid(TheString, IDX, 1)) Then
+                strNumber = strNumber & Mid(TheString, IDX, 1)
+            End If
+            IDX = IDX + 1
+        Loop
+        If Len(strNumber) > 0 Then
+            NumericPart = CLng(strNumber)
+        End If
+
+        Get_NumericPartOfString = NumericPart
+
+End Function
+	

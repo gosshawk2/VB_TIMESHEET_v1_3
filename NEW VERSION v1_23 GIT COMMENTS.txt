@@ -1,0 +1,10 @@
+VB TIMESHEET v1.23BETA 18-DEC-2018 Just been released onto one computer (EP26190) for Steffi to test. Differences b/t v1.22 and v1.23 - NEW FORM:
+VIEW PROGRESS / REF PROGRESS STATUS tracks whether the STATUS field (new in DB table tblDeliveryInfo) is at ROLLED / IN PROGRESS / COMPLETED in appropriate coloures. ALSO has PalletsGen / CagesGen / TotesGen entry field for clerk to fill in.
+Has a RECORD LOCK field so only one clerk can be in the same reference at the time (but does pose a problem if the reference is NOT completed and is handed over to the next shift to complete by someone else as the new clerk will have to log in and the previous clerk log out - so username is now different - record will still be LOCKED to previous clerk). Filter radio buttons to choose to show individual STATUS. 
+Able now to TYPE the reference into the comDeliveryRef Dropdown and press enter to bring up that reference in the Control Panel - with no problems if the Delivery Date is from a previous day etc. More options for Supplier Compliance.
+A NEW BUTTON down the right side now exists to COMPLETE the reference.
+It checks all requirements are met first before TURNING THE BUTTON GREEN and displaying YES in the box next to it - if conditions are met when pressed.
+AND the inclusion of a new menu item - WINDOWS - under this will show all the open CHILD WINDOWS with the reference number in the title - so now the clerk can jump from one reference to the other in ONE INSTANCE of the application.
+References can also be selected by clicking in the appropriate column in the View Progress form to bring up that reference in a NEW Control Panel Form.
+No changes to the IMPORT or UPDATE EMPLOYEES functions.
+Operatives area still using OLD method. NO GRID. Daniel Goss - 18/12/2018 21:30

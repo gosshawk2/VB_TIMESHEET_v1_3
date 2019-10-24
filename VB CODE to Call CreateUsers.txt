@@ -1,0 +1,27 @@
+Private Sub CreateNewUsersToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles CreateNewUsersToolStripMenuItem.Click
+        'frmCreateUsers
+        Dim cf As New frmCreateUsers
+        Dim CreateUsersForm As Form
+        Dim frmName As String
+        Dim SearchName As String = "CreateUsers"
+
+
+        CreateUsersForm = Get_MDIChildForm(SearchName)
+
+        If Not IsNothing(CreateUsersForm) Then
+            frmName = CreateUsersForm.Name
+            If UCase(frmName) = UCase(SearchName) Then
+                CreateUsersForm.Show()
+            End If
+        Else
+            CreateUsersForm = New frmCreateUsers
+            CreateUsersForm.Name = SearchName
+            CreateUsersForm.Text = "View/Edit Users"
+            CreateUsersForm.MdiParent = Me
+            CreateUsersForm.StartPosition = FormStartPosition.Manual
+            CreateUsersForm.Show()
+        End If
+
+    End Sub
+	
+	

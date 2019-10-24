@@ -1,0 +1,57 @@
+Sub InsertOperative(Optional ByVal TimeStartTAG As Long = 400, Optional ByVal LowerTag As Long = 43,
+                        Optional ByVal ControlsPerRow As Long = 6, Optional ByVal StartFieldIndex As Long = 5)
+        Dim OpID As Long
+        Dim UpperTAG As Long
+        Dim FieldNames As String
+        Dim ErrMessage As String = ""
+        Dim TotalRows As Long
+        Dim StartBtnTAG As Long = 0
+        Dim strDeliveryDate As String
+        Dim strDeliveryRef As String
+        Dim strASNNo As String
+        Dim HighestOpTag As Long = 0
+        Dim TotalControlsInFrame As Long = 0
+
+        'Need to calculate the UPPER TAG from TOTAL OPERATIVES and Total Number of controls in the FRAME_OPERATIVES:
+
+        strDeliveryDate = Me.txtDeliveryDate.Text
+        strDeliveryRef = Me.txtDeliveryRef.Text
+        UpperTAG = 0
+        TotalRows = 0
+        StartBtnTAG = 0
+        HighestOpTag = 0
+        If Not IsNothing(frmMainGIForm.Dic_TotalOperatives) Then
+            If frmMainGIForm.Dic_TotalOperatives(strDeliveryDate & "_" & strDeliveryRef) < 1 Then
+                frmMainGIForm.Dic_TotalOperatives(strDeliveryDate & "_" & strDeliveryRef) = 1
+            End If
+            TotalRows = frmMainGIForm.Dic_TotalOperatives(strDeliveryDate & "_" & strDeliveryRef) - 1
+        End If
+        If Not IsNothing(frmMainGIForm.Dic_HighestOpBtnTAGID(strDeliveryDate & "_" & strDeliveryRef)) Then
+            StartBtnTAG = frmMainGIForm.Dic_HighestOpBtnTAGID(strDeliveryDate & "_" & strDeliveryRef)
+        End If
+        If Not IsNothing(frmMainGIForm.Dic_HighestOpTAGID(strDeliveryDate & "_" & strDeliveryRef)) Then
+            HighestOpTag = frmMainGIForm.Dic_HighestOpTAGID(strDeliveryDate & "_" & strDeliveryRef)
+        End If
+        strASNNo = Me.txtASNnum.Text
+        TotalControlsInFrame = (TotalRows * ControlsPerRow)
+
+
+        If Len(ErrMessage) > 0 Then
+            MsgBox("Error while Getting FieldNames")
+            Exit Sub
+        End If
+
+        If TotalRows = 0 Then
+            UpperTAG = ((1 * ControlsPerRow) - 1) + LowerTag
+        Else
+            UpperTAG = ((TotalRows * ControlsPerRow) - 1) + LowerTAG
+        End If
+
+        OpID = frmMainGIForm.Dic_TotalOperatives(strDeliveryDate & "_" & strDeliveryRef)
+        AddNewOperatives(frmMainGIForm.Dic_TotalOperatives(strDeliveryDate & "_" & strDeliveryRef), Frame_Operatives, OpID, HighestOpTag, StartBtnTAG,
+                         strDeliveryDate, strDeliveryRef, strASNNo, LowerTAG, UpperTAG, TimeStartTAG, frmMainGIForm.OpFieldnames, TotalRows, StartFieldIndex)
+        Me.txtTotalOps.Text = CStr(frmMainGIForm.Dic_TotalOperatives(strDeliveryDate & "_" & strDeliveryRef) - 1)
+        frmMainGIForm.Dic_HighestOpTAGID(strDeliveryDate & "_" & strDeliveryRef) = HighestOpTag 'Should be 48 after first row entry (48 = comments TAG)
+        frmMainGIForm.Dic_HighestOpBtnTAGID(strDeliveryDate & "_" & strDeliveryRef) = StartBtnTAG
+    End Sub
+	

@@ -1,0 +1,27 @@
+Private Sub btnAddOperative_Click(sender As Object, e As EventArgs) Handles btnAddOperative.Click
+        ' ********* ADD OPERATIVE: *****************
+        Dim TotalRows As Long
+        Dim ASNNo As String
+        Dim ExtractTotals As clsTotals
+        Dim NewRow As Long
+
+        If IsDate(Me.txtDeliveryDate.Text) Then
+            strDeliveryDate = CDate(Me.txtDeliveryDate.Text).ToString("dd/MM/yyyy")
+            strDeliveryRef = Me.txtDeliveryRef.Text
+            ASNNo = Me.txtASNnum.Text
+            ExtractTotals = dic_Totals(strDeliveryDate & "_" & strDeliveryRef)
+            If ExtractTotals IsNot Nothing Then
+                'TotalRows = Get_TotalRows("tblOperatives", strDeliveryRef)
+                TotalRows = ExtractTotals.Total_Operatives
+            End If
+            NewRow = TotalRows + 1
+            TotalRows = InsertOperatives(True, strDeliveryDate, strDeliveryRef, ASNNo, Me.Frame_Operatives, NewRow)
+            'TotalRows = Get_TotalRows("tblOperatives", strDeliveryRef)
+            Me.txtTotalOps.Text = CStr(TotalRows)
+        Else
+            'MsgBox("Something wrong with the Delivery Date ?")
+            frmMainGIForm.txtMessages.Text = "Something wrong with the Delivery Date ?"
+        End If
+    End Sub
+	
+	

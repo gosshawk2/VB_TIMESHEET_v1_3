@@ -1,0 +1,59 @@
+Sub PopulateMyDataSource_With_ColumnWidths(ByRef DGV As DataGridView, ByRef DSource As Object, ByVal connString As String, ByRef SQLStr As String,
+                             Optional ByRef NumRows As Integer = 0, Optional ByRef Message As String = "", Optional ByVal ColumnWidths As String = "")
+        Dim con As MySqlConnection
+        Dim cmd As MySqlCommand
+        Dim da As MySqlDataAdapter
+        Dim ds As DataSet
+        Dim ColwidthArr As String() = Nothing
+        Dim IDX As Integer = 0
+
+        Try
+            con = New MySqlConnection(connString)
+            cmd = New MySqlCommand(SQLStr, con)
+            con.Open()
+            da = New MySqlDataAdapter(cmd)
+            ds = New DataSet()
+            da.Fill(ds, "srcTable") 'MYSQL DATE CONVERSION PROBLEM HERE !
+            ReDim ColwidthArr(1)
+            If IsDBNull(ds.Tables("srcTable")) Then
+                'MsgBox("Problem: Empty Rows", vbOK, "Problem in Asset Register v" & frmMainGIForm.myVersion)
+                Message = "Problem: Empty Rows"
+                frmMainGIForm.logger.LogError("GI_Error_v1_3.log", Application.StartupPath, Message, "PopulateMyDataSource_With_ColumnWidths()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR Logged in:" & frmMainGIForm.myUsername)
+                NumRows = 0
+            Else
+                NumRows = ds.Tables("srcTable").Rows.Count
+                'ds.Tables("srcTable").Columns.Add.Caption = "Row Num"
+                For RowIDX = 1 To NumRows
+                    'ds.Tables("srcTable").item(rowidx).value = CStr(RowIDX)
+                Next
+            End If
+            If Len(ColumnWidths) > 0 Then
+                ColwidthArr = strToStringArray(ColumnWidths, ",")
+                If DGV.ColumnCount < UBound(ColwidthArr) Then
+                    Message = "Problem: Mismatched columns - Column Count is LESS THAN Number of Columns Passed"
+                    frmMainGIForm.logger.LogError("GI_Error_v1_3.log", Application.StartupPath, Message, "PopulateMyDataSource_With_ColumnWidths()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR Logged in:" & frmMainGIForm.myUsername)
+                End If
+                If DGV.ColumnCount > UBound(ColwidthArr) Then
+                    Message = "Problem: Mismatched columns - Column Count is GREATER THAN Number of Columns Passed"
+                    frmMainGIForm.logger.LogError("GI_Error_v1_3.log", Application.StartupPath, Message, "PopulateMyDataSource_With_ColumnWidths()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR Logged in:" & frmMainGIForm.myUsername)
+                End If
+                'DataGridViewAutoSizeColumnsMode = FILL
+                IDX = 0
+                While IDX < UBound(ColwidthArr)
+                    DGV.Columns(IDX).FillWeight = CInt(ColwidthArr(IDX))
+                    IDX = IDX + 1
+                End While
+            End If
+            DSource.DataSource = ds.Tables("srcTable")
+            con.Close()
+        Catch ex As Exception
+            'MsgBox("Exception Error: " & ex.ToString, vbOK, "Exception Error in Asset Register")
+            Message = Message & vbCrLf & "Exception Error in PopulateMyDataSource_with_columnWidths: " & ex.ToString & ", SQL= " & SQLStr
+            frmMainGIForm.logger.LogError("GI_Error_v1_3.log", Application.StartupPath, Message, "PopulateMyDataSource_With_ColumnWidths()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR Logged in:" & frmMainGIForm.myUsername)
+
+        End Try
+
+
+    End Sub
+	
+	

@@ -1,0 +1,183 @@
+Sub AddNewExtra(ByRef TotalOps As Long, FrameScrollControl As ScrollableControl, ByRef OpID As Long, ByRef TagID As Long, ByRef btnTAGID As Long,
+                         strDeliveryDate As String, strDeliveryRef As String, ASN As String, LowerTAG As Long, UpperTAG As Long, ByVal TimeTAGStart As Long,
+                         Fieldnames As String, TotalRows As Long, Optional StartFieldIndex As Long = 3, Optional DontIncrementOP As Boolean = False,
+                         Optional ByRef ErrMessage As String = "", Optional ByRef NewIndex As Long = 0,
+                         Optional ByVal PartNo As String = "", Optional ByVal PartQty As String = "", Optional ByRef StartTABIndex As Long = 1,
+                         Optional ByVal TotalOpTEXTControlsPerRow As Long = 3)
+        Dim RowGap As Long
+        Dim TopPos As Integer
+        Dim StartTopPos As Integer
+        Dim ScrollBarHeight As Integer
+        Dim ComboArray() As String
+        Dim TimeTAGID As Long
+        Dim ControlText As String
+        Dim ControlType As String
+        Dim ControlTAG As String
+        Dim ControlDate As Date
+        Dim ControlLeft As Integer
+        Dim ControlTop As Integer
+        Dim ControlWidth As Integer
+        Dim ControlHeight As Integer
+        Dim ControlDeliveryDate As Date
+        Dim ControlDeliveryRef As String
+        Dim ControlASN As String
+        Dim ControlOBJCount As Long
+        Dim ControlStartTAG As String
+        Dim ControlEndTAG As String
+        Dim ControlRowNumber As Long
+        Dim ControlTotalRows As Long
+        Dim MakeVisible As Boolean
+        Dim ControlBackColor As Integer
+        Dim ControlForeColor As Integer
+        Dim ControlLeftMargin As Boolean
+        Dim ControlFieldname As String
+        Dim FieldnameArr() As String
+        Dim LoadFieldsOK As Boolean
+        Dim ControlFieldsTable As String
+        Dim SearchCriteria As String
+        Dim ControlDBTable As String
+        Dim ControlFontName As String
+        Dim ControlFontSize As Integer
+        Dim ControlStyle As String
+        Dim FrameRowNumberField As String = ""
+        Dim IDX As Long
+        Dim RowIDX As Long
+        Dim Firstname As String
+        Dim Lastname As String
+        Dim FullName As String
+        Dim strActivity As String
+        Dim ControlTABIndex As Long
+
+        '************************* check FrameScrollControl - wrong Frame passed.
+
+        ReDim FieldnameArr(1)
+        ControlTABIndex = StartTABIndex
+        ControlDBTable = "tblshortsandextraparts"
+        If Len(Fieldnames) > 0 Then
+            'Fieldnames = GetMyFields("tblOperatives", frmMainGIForm.myConnString, ErrMessage)
+            FieldnameArr = DanG_DB_Tools.strToStringArray(Fieldnames, ",", 0, False, False, False, "_", False)
+        Else
+            ReDim FieldnameArr(20)
+            Fieldnames = GetMyFields(ControlDBTable, frmMainGIForm.myConnString, ErrMessage)
+            Beep()
+            FieldnameArr = DanG_DB_Tools.strToStringArray(Fieldnames, ",", 0, False, False, False, "_", False)
+        End If
+        FrameRowNumberField = "FrameRowNumber"
+        StartTopPos = 2
+        RowGap = 28
+        If OpID < 2 Then
+            TopPos = StartTopPos
+        Else
+            TopPos = ((OpID - 1) * RowGap) + StartTopPos
+        End If
+
+        TagID = Get_StartTAG(TimeTAGStart, OpID, TotalOpTEXTControlsPerRow, 1)
+
+        ControlFontName = "Cambria"
+
+        If IsDate(strDeliveryDate) Then
+            ControlDeliveryDate = CDate(strDeliveryDate)
+        Else
+            ControlDeliveryDate = CDate("01/01/1970")
+        End If
+        ControlDeliveryRef = strDeliveryRef
+
+        MakeVisible = True
+        ControlType = "TEXTBOX"
+        ControlText = CStr(OpID)
+        ControlLeft = 6
+        ControlTop = TopPos
+        ControlHeight = 23
+        ControlWidth = 35
+        ControlFontSize = 11
+        ControlStyle = "BOLD"
+        ControlTAG = CStr(TagID)
+        ControlDate = Now()
+        ControlDeliveryRef = strDeliveryRef
+        ControlASN = ASN
+        ControlOBJCount = OpID
+        ControlStartTAG = CStr(LowerTAG)
+        ControlEndTAG = CStr(UpperTAG)
+        ControlTotalRows = TotalRows ' need to know lowerTAG and number of fields in frame_Operatives.
+        'BackColor = RGB(240, 248, 255) 'ALICEBLUE
+        ControlBackColor = RGB(0, 112, 192) 'BLUE
+        ControlForeColor = RGB(255, 245, 60) 'yellow text
+        ControlLeftMargin = False
+        ControlFieldname = FrameRowNumberField
+        ControlRowNumber = OpID
+        ControlTotalRows = TotalOps
+        ComboArray = Nothing
+
+        Call AddNewControl(True, FrameScrollControl, ControlDBTable, ControlFieldname, "ID", Nothing,
+            "txtExtraRow:" & CStr(OpID), ControlText, ControlType, ControlTAG, ControlTABIndex,
+        ControlDate, ControlLeft, ControlTop, ControlWidth, ControlHeight, ControlDeliveryDate, ControlDeliveryRef,
+                           frmMainGIForm.myEmpNo, frmMainGIForm.myUsername, frmMainGIForm.myName, ControlASN,
+        ControlOBJCount, ControlStartTAG, ControlEndTAG, ControlRowNumber, ControlTotalRows, MakeVisible,
+        ComboArray, ControlBackColor, ControlLeftMargin, ControlFontName, ControlFontSize, ControlStyle, ControlForeColor, "CENTER", "", True)
+        TagID = TagID + 1
+        ControlTABIndex = ControlTABIndex + 1
+
+        ControlLeft = 48
+        ControlTop = TopPos
+        ControlWidth = 120
+        ControlHeight = 23
+        ControlTAG = CStr(TagID)
+        'ComboArray = PopulateDropdowns("Employees", 2, 0, False, WB_MainTimesheetData)
+        ComboArray = Nothing
+
+        ControlType = "TEXTBOX"
+        ControlText = PartNo
+        ControlStyle = "BOLD"
+        ControlFontName = "Cambria"
+        ControlFontSize = 11
+        ControlForeColor = RGB(0, 0, 0) 'black
+        ControlBackColor = RGB(240, 248, 255) 'ALICEBLUE, needs lt grey
+        ControlFieldname = FieldnameArr(StartFieldIndex)
+
+        NewIndex = AddNewControl(True, FrameScrollControl, ControlDBTable, ControlFieldname, "ID", Nothing,
+            "txtExtraPartNo:" & CStr(OpID), ControlText, ControlType, ControlTAG, ControlTABIndex,
+        ControlDate, ControlLeft, ControlTop, ControlWidth, ControlHeight, ControlDeliveryDate, ControlDeliveryRef,
+                                 frmMainGIForm.myEmpNo, frmMainGIForm.myUsername, frmMainGIForm.myName, ControlASN,
+        ControlOBJCount, ControlStartTAG, ControlEndTAG, ControlRowNumber, ControlTotalRows, MakeVisible,
+        ComboArray, ControlBackColor, ControlLeftMargin, ControlFontName, ControlFontSize, ControlStyle, ControlForeColor, "CENTER", "", False)
+        TagID = TagID + 1
+        ControlTABIndex = ControlTABIndex + 1
+
+        'ComboArray = PopulateDropdowns("Activities", 1, 0, True, WB_MainTimesheetData)
+        ComboArray = Nothing
+        strActivity = ""
+
+        ControlType = "TEXTBOX"
+        ControlText = PartQty
+        ControlTAG = CStr(TagID)
+        ControlStyle = "BOLD"
+        ControlLeft = 174
+        ControlWidth = 50
+        ControlTop = TopPos
+        ControlHeight = 23
+        ControlFontName = "CAMBRIA"
+        ControlFontSize = 11
+        ControlBackColor = RGB(240, 248, 255) 'ALICEBLUE
+        ControlForeColor = RGB(0, 0, 0) 'black
+        ControlFieldname = FieldnameArr(StartFieldIndex + 1)
+
+        NewIndex = AddNewControl(True, FrameScrollControl, ControlDBTable, ControlFieldname, "ID", Nothing,
+            "txtExtraQty:" & CStr(OpID), ControlText, ControlType, ControlTAG, ControlTABIndex,
+        ControlDate, ControlLeft, ControlTop, ControlWidth, ControlHeight, ControlDeliveryDate, ControlDeliveryRef,
+                                 frmMainGIForm.myEmpNo, frmMainGIForm.myUsername, frmMainGIForm.myName, ControlASN,
+        ControlOBJCount, ControlStartTAG, ControlEndTAG, ControlRowNumber, ControlTotalRows, MakeVisible,
+        ComboArray, ControlBackColor, ControlLeftMargin, ControlFontName, ControlFontSize, ControlStyle, ControlForeColor, "CENTER", "", False)
+        TagID = TagID + 1
+        ControlTABIndex = ControlTABIndex + 1
+
+        If DontIncrementOP = False Then
+            OpID = OpID + 1
+        End If
+
+        FrameScrollControl.AutoScroll = True
+
+        TotalOps = OpID
+        StartTABIndex = ControlTABIndex
+
+    End Sub
+	

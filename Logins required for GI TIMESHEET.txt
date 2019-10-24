@@ -1,0 +1,52 @@
+Hi Dan
+
+Can you please create the 4 logins each for the following and get me the details. If they already got 1 login then create other 3.
+
+
+BLUE SHIFT
+
+FLM 	 - Rhys Buchan						40880
+FLM 	 - Mariusz Kowalski					39410
+FLM 	 - Manoj Bagvandas					00040
+		 - Steffi Fernades					45681
+		 - Valancy Fernades					
+		 - Mitesh Pancholi					23321
+		 - Adrian Vasilache					41790
+		 - Tirth Singh						39318
+Champion - Carmen Iuliana Ciurez			45940
+		 - Vishal Mangela					41068
+		 - Umamah Swaleh					AGY462
+		 - Peter Hayes						AGY605
+		 - Carmen Gugulici					42221
+
+GREEN (NIGHT) SHIFT
+
+FLM - Kevin Coley				kcoley		42335
+FLM - Karol	Kwidzinski			kkwidzinski	19324
+FLM - Gheorghita Pruteanu		gpruteanu	34988
+Operator - Ion Ilarian			ilarian		32127
+Operator - George Grigoras		ggrigoras	41058
+Operator - Florenta Dragne		fdragne		34989
+Operator - Karolina Sturlis		ksturlis	41747
+Operator - Catalin Zamfir		czamfir		39570
+Operator - Amalia Cocean		acocean		53862
+Operator - Mirela Constantin	mconstantin	53909
+Operator - Rodica Mainescu		rmainescu	53908
+Operator - Lucian Cazacu		lcazacu		40538
+Operator - Liliana Trausch		ltarusch	42331
+
+YELLOW SHIFT
+
+FLM	Diana -	Filip				Dfilip		41761
+FLM	Madalina -	Avram			Mavram		36191
+FLM	Andy -	Pickett				Apickett	19621
+Champion -	Felix Tulitu		Ftulitu		42301
+Operator -	Ionut Petreanu		Ipretreanu	42553
+Operator -	Anca Cute			Acute		42295
+Operator -	Nicoleta Rus		Nrus		42317
+Operator -	Andrada	Fagaras		Afagaras	38557
+Operator -	Ivan Yordanov		Iyordanov	51254
+Operator -	Oana Dragoi			Odragoi		51251
+Operator -	Dumintru Nicolae	Dnicolae	42549
+Operator -	Monica Manea		Mmanea		AGY516
+Operator Red -	Diana Alecsa	Dalecsa		41049

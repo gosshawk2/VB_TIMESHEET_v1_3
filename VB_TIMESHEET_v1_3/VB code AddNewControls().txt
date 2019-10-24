@@ -1,0 +1,383 @@
+Function AddNewControls(IsNewControl As Boolean, ScrollControlFrame As ScrollableControl, TheControl As Control, ctrlProperty As clsControls,
+        Optional ByVal MakeVisible As Boolean = True, Optional ByRef ListArray() As Object = Nothing, Optional TextAlign As String = "LEFT",
+        Optional LabelAlign As String = "MIDDLE CENTER", Optional MakeReadOnly As Boolean = False, Optional AddComboList As Boolean = False,
+        Optional ByVal ControlStartDateTime As Date = #1970-01-01#, Optional ByVal ControlEndDateTime As Date = #1970-01-01#) As Long
+
+        Dim tempControl As New clsControls
+        Dim NewControl As Control = Nothing
+        Dim NewOBJ As Control
+        Dim NewCombo As New ComboBox
+        Dim NewButton As New Button
+        Dim NewTextBox As New TextBox
+        Dim NewLabel As New Label
+        Dim IDX As Long
+        Dim CollectionKey As Object
+        Dim ControlFrameName As String
+        'Dim font = New Font(tb_remark.Font, FontStyle.Italic)
+        Dim NewFont As Font
+
+        tempControl = ctrlProperty
+        'On Error GoTo Err_AddNewControl
+        If ScrollControlFrame IsNot Nothing Then
+            ControlFrameName = ScrollControlFrame.Name
+        Else
+            ControlFrameName = "NA"
+        End If
+        'Set Dic_Collection = CreateObject("Scripting.Dictionary")
+        'Dic_Collection.RemoveAll
+        NewOBJ = Nothing
+        If IsNewControl Then
+
+            If UCase(tempControl.ControlType) = "COMBOBOX" Then
+                NewCombo = New ComboBox
+
+                'NewOBJ = New ComboBox
+                'Set NewCtrl = TheUserform.Frame_Operatives.Controls.Add("Forms.ComboBox.1", ControlName, MakeVisible)
+                NewCombo.Name = tempControl.ControlName
+                NewCombo.Top = tempControl.ControlTop
+                NewCombo.Left = tempControl.ControlLeft
+                NewCombo.Width = tempControl.ControlWidth
+                NewCombo.AutoSize = False
+
+                Select Case UCase(tempControl.ControlFontStyle)
+                    Case "BOLD"
+                        NewCombo.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Bold)
+                    Case "ITALIC"
+                        NewCombo.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Italic)
+                    Case "STRIKEOUT"
+                        NewCombo.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Strikeout)
+                    Case "UNDERLINE"
+                        NewCombo.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Underline)
+                    Case "BOLD,UNDERLINE"
+                        NewCombo.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Underline Or Drawing.FontStyle.Bold)
+                    Case "UNDERLINE,BOLD"
+                        NewCombo.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Underline Or Drawing.FontStyle.Bold)
+                    Case "BOLD,ITALIC"
+                        NewCombo.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Italic Or Drawing.FontStyle.Bold)
+                    Case "ITALIC,BOLD"
+                        NewCombo.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Italic Or Drawing.FontStyle.Bold)
+                    Case Else
+                        NewCombo.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Regular)
+                End Select
+                NewCombo.Tag = tempControl.ControlTAG
+                NewCombo.Text = tempControl.ControlValue
+                NewCombo.ForeColor = ColorTranslator.FromWin32(tempControl.ControlForeColor)
+                NewCombo.BackColor = ColorTranslator.FromWin32(tempControl.ControlBackColor)
+                'NewCtrl.ControlAddLeftMargin does NOT exist in VB.NET - but padding does.
+                If tempControl.ControlHeight > 0 Then
+                    NewCombo.Height = tempControl.ControlHeight
+                End If
+                NewCombo.Items.Clear()
+
+                If Not IsNothing(ListArray) Then
+                    For IDX = 0 To UBound(ListArray)
+                        If Len(ListArray(IDX)) > 0 Then
+                            NewCombo.Items.Add(ListArray(IDX))
+                        End If
+                    Next
+                End If
+                'NewControl = DirectCast(NewOBJ, ComboBox)
+                'NewControl = NewOBJ
+                'AddHandler NewCombo.TextChanged, AddressOf NewCombo_textchanged
+
+                tempControl.comboAfterUpdate = NewCombo
+                NewOBJ = DirectCast(NewCombo, System.Windows.Forms.ComboBox)
+            End If
+
+
+            If UCase(tempControl.ControlType) = "BTN" Then
+                'Set NewCtrl = TheUserform.Frame_Operatives.Controls.Add("Forms.CommandButton.1", ControlName, MakeVisible)
+                'NewOBJ = New Button
+                NewButton.Name = tempControl.ControlName
+                NewButton.Top = tempControl.ControlTop
+                NewButton.Left = tempControl.ControlLeft
+                NewButton.Width = tempControl.ControlWidth
+                NewButton.Tag = tempControl.ControlTAG
+
+                NewButton.Text = tempControl.ControlValue
+                NewButton.ForeColor = ColorTranslator.FromWin32(tempControl.ControlForeColor)
+                NewButton.BackColor = ColorTranslator.FromWin32(tempControl.ControlBackColor)
+
+                'can also use .FromName()
+                'NewOBJ.BackColor = ControlBACKCOLOUR
+                Select Case UCase(tempControl.ControlFontStyle)
+                    Case "BOLD"
+                        NewButton.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Bold)
+                    Case "ITALIC"
+                        NewButton.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Italic)
+                    Case "STRIKEOUT"
+                        NewButton.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Strikeout)
+                    Case "UNDERLINE"
+                        NewButton.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Underline)
+                    Case "BOLD,UNDERLINE"
+                        NewButton.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Underline Or Drawing.FontStyle.Bold)
+                    Case "UNDERLINE,BOLD"
+                        NewButton.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Underline Or Drawing.FontStyle.Bold)
+                    Case "BOLD,ITALIC"
+                        NewButton.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Italic Or Drawing.FontStyle.Bold)
+                    Case "ITALIC,BOLD"
+                        NewButton.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Italic Or Drawing.FontStyle.Bold)
+                    Case Else
+                        NewButton.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Regular)
+
+                End Select
+                'NewOBJ.Font = New Font(ControlFontName, ControlFontSize)
+                'NewCtrl.SelectionMargin = ControlAddLeftMargin 'NOT applicable to BUttons !
+
+                If tempControl.ControlHeight > 0 Then
+                    NewButton.Height = tempControl.ControlHeight
+                End If
+                'AddHandler NewButton.Click, AddressOf Newbutton_click
+                If InStr(1, UCase(NewButton.Name), UCase("StartTime"), vbTextCompare) > 0 Then
+                    tempControl.cbTimeStartEvent = NewButton
+                End If
+                If InStr(1, UCase(NewButton.Name), UCase("FinishTime"), vbTextCompare) > 0 Then
+                    tempControl.cbTimeEndEvent = NewButton
+                End If
+                'If InStr(1, UCase(NewButton.Name), UCase("btnOperativeStartTime"), vbTextCompare) > 0 Then
+                'tempControl.cbTimeStartEvent = NewButton
+                'End If
+                'If InStr(1, UCase(NewButton.Name), UCase("btnOperativeFinishTime"), vbTextCompare) > 0 Then
+                'tempControl.cbTimeEndEvent = NewButton
+                'End If
+                NewOBJ = DirectCast(NewButton, System.Windows.Forms.Button)
+                'ScrollControlFrame.Controls.Add(NewButton)
+                'If InStr(1, UCase(NewOBJ.Name), "START", vbTextCompare) > 0 Then
+                'AddHandler NewOBJ.Click, AddressOf NewOBJ_click
+                'tempControl.cbTimeStartEvent = NewOBJ
+                'End If
+
+                'If InStr(1, UCase(NewOBJ.Name), "END", vbTextCompare) > 0 Then
+                'AddHandler NewOBJ.Click, AddressOf NewOBJ_click
+                'tempControl.cbTimeEndEvent = NewOBJ
+                'End If
+            End If
+
+            If UCase(tempControl.ControlType) = "LABEL" Then
+                'Set NewCtrl = TheUserform.Frame_Operatives.Controls.Add("Forms.Textbox.1", ControlName, MakeVisible)
+                'NewOBJ = New TextBox
+
+                NewLabel.Name = tempControl.ControlName
+                NewLabel.Top = tempControl.ControlTop
+                NewLabel.Left = tempControl.ControlLeft
+                NewLabel.Width = tempControl.ControlWidth
+                NewLabel.AutoSize = False
+                'NewTextBox.TextAlign = HorizontalAlignment.Center/.left/.right
+                Select Case UCase(tempControl.ControlFontStyle)
+                    Case "BOLD"
+                        NewLabel.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Bold)
+                    Case "ITALIC"
+                        NewLabel.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Italic)
+                    Case "STRIKEOUT"
+                        NewLabel.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Strikeout)
+                    Case "UNDERLINE"
+                        NewLabel.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Underline)
+                    Case "BOLD,UNDERLINE"
+                        NewLabel.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Underline Or Drawing.FontStyle.Bold)
+                    Case "UNDERLINE,BOLD"
+                        NewLabel.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Underline Or Drawing.FontStyle.Bold)
+                    Case "BOLD,ITALIC"
+                        NewLabel.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Italic Or Drawing.FontStyle.Bold)
+                    Case "ITALIC,BOLD"
+                        NewLabel.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Italic Or Drawing.FontStyle.Bold)
+                    Case Else
+                        NewLabel.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Regular)
+                End Select
+                'NewOBJ.Font = New Font(ControlFontName, ControlFontSize)
+                NewLabel.Tag = tempControl.ControlTAG
+                NewLabel.Text = tempControl.ControlValue
+
+                If UCase(LabelAlign) = "BOTTOM LEFT" Then
+                    NewLabel.TextAlign = ContentAlignment.BottomLeft
+                ElseIf UCase(LabelAlign) = "BOTTOM CENTER" Then
+                    NewLabel.TextAlign = ContentAlignment.BottomCenter
+                ElseIf UCase(LabelAlign) = "BOTTOM RIGHT" Then
+                    NewLabel.TextAlign = ContentAlignment.BottomRight
+                ElseIf UCase(LabelAlign) = "MIDDLE LEFT" Then
+                    NewLabel.TextAlign = ContentAlignment.MiddleLeft
+                ElseIf UCase(LabelAlign) = "MIDDLE CENTER" Then
+                    NewLabel.TextAlign = ContentAlignment.MiddleCenter
+                ElseIf UCase(LabelAlign) = "MIDDLE RIGHT" Then
+                    NewLabel.TextAlign = ContentAlignment.MiddleRight
+                ElseIf UCase(LabelAlign) = "TOP LEFT" Then
+                    NewLabel.TextAlign = ContentAlignment.TopLeft
+                ElseIf UCase(LabelAlign) = "TOP CENTER" Then
+                    NewLabel.TextAlign = ContentAlignment.TopCenter
+                ElseIf UCase(LabelAlign) = "TOP RIGHT" Then
+                    NewLabel.TextAlign = ContentAlignment.TopRight
+                Else
+                    NewLabel.TextAlign = ContentAlignment.MiddleCenter
+                End If
+
+
+                NewLabel.ForeColor = ColorTranslator.FromWin32(tempControl.ControlForeColor)
+                NewLabel.BackColor = ColorTranslator.FromWin32(tempControl.ControlBackColor)
+                'NewCtrl.ControlAddLeftMargin does NOT exist in VB.NET - but padding does.
+                If tempControl.ControlHeight > 0 Then
+                    NewLabel.Height = tempControl.ControlHeight
+                End If
+                'txtBoxAfterUpdate_change in clsControls
+                'tempControl.txtBoxAfterUpdate = NewTextBox
+                'AddHandler NewTextBox.TextChanged, AddressOf NewTextBox_textchanged
+
+                NewOBJ = DirectCast(NewLabel, System.Windows.Forms.Label)
+            End If
+
+            If UCase(tempControl.ControlType) = "TEXTBOX" Then
+                'Set NewCtrl = TheUserform.Frame_Operatives.Controls.Add("Forms.Textbox.1", ControlName, MakeVisible)
+                'NewOBJ = New TextBox
+
+                NewTextBox.Name = tempControl.ControlName
+                NewTextBox.Top = tempControl.ControlTop
+                NewTextBox.Left = tempControl.ControlLeft
+                NewTextBox.Width = tempControl.ControlWidth
+                NewTextBox.AutoSize = False
+                'NewTextBox.TextAlign = HorizontalAlignment.Center/.left/.right
+                Select Case UCase(tempControl.ControlFontStyle)
+                    Case "BOLD"
+                        NewTextBox.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Bold)
+                    Case "ITALIC"
+                        NewTextBox.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Italic)
+                    Case "STRIKEOUT"
+                        NewTextBox.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Strikeout)
+                    Case "UNDERLINE"
+                        NewTextBox.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Underline)
+                    Case "BOLD,UNDERLINE"
+                        NewTextBox.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Underline Or Drawing.FontStyle.Bold)
+                    Case "UNDERLINE,BOLD"
+                        NewTextBox.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Underline Or Drawing.FontStyle.Bold)
+                    Case "BOLD,ITALIC"
+                        NewTextBox.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Italic Or Drawing.FontStyle.Bold)
+                    Case "ITALIC,BOLD"
+                        NewTextBox.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Italic Or Drawing.FontStyle.Bold)
+                    Case Else
+                        NewTextBox.Font = New Font(tempControl.ControlFontName, tempControl.ControlFontSize, Drawing.FontStyle.Regular)
+                End Select
+                'NewOBJ.Font = New Font(ControlFontName, ControlFontSize)
+                NewTextBox.Tag = tempControl.ControlTAG
+                NewTextBox.Text = tempControl.ControlValue
+                NewTextBox.ForeColor = ColorTranslator.FromWin32(tempControl.ControlForeColor)
+                NewTextBox.BackColor = ColorTranslator.FromWin32(tempControl.ControlBackColor)
+
+                If UCase(TextAlign) = "LEFT" Then
+                    NewTextBox.TextAlign = HorizontalAlignment.Left
+                ElseIf UCase(TextAlign) = "CENTER" Then
+                    NewTextBox.TextAlign = HorizontalAlignment.Center
+                ElseIf UCase(TextAlign) = "RIGHT" Then
+                    NewTextBox.TextAlign = HorizontalAlignment.Right
+                Else
+                    NewTextBox.TextAlign = HorizontalAlignment.Left
+                End If
+                'NewCtrl.ControlAddLeftMargin does NOT exist in VB.NET - but padding does.
+                If tempControl.ControlHeight > 0 Then
+                    NewTextBox.Height = tempControl.ControlHeight
+                End If
+                'txtBoxAfterUpdate_change in clsControls
+                tempControl.txtBoxAfterUpdate = NewTextBox
+                'AddHandler NewTextBox.TextChanged, AddressOf NewTextBox_textchanged
+
+                If MakeReadOnly Then
+                    NewTextBox.ReadOnly = True
+                Else
+                    NewTextBox.ReadOnly = False
+                End If
+
+                NewOBJ = DirectCast(NewTextBox, System.Windows.Forms.TextBox)
+
+            End If
+            ScrollControlFrame.Controls.Add(NewOBJ)
+        Else
+            'FIXED CONTROLS done at Design-time:
+            'Use Found Textbox - control passed through
+            If UCase(tempControl.ControlType) = "TEXTBOX" Then
+                NewTextBox = New TextBox
+                If TypeName(TheControl) = "TextBox" Then
+                    NewTextBox = TheControl
+                    tempControl.txtBoxAfterUpdate = NewTextBox
+                    NewOBJ = DirectCast(NewTextBox, System.Windows.Forms.TextBox)
+                Else
+                    frmMainGIForm.logger.LogError("GI_ERRORS_1_0.log", Application.StartupPath, "Wrong Type - TEXTBOX being cast to:" & TypeName(TheControl), "AddNewControl()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR LOGGED OUT:" & frmMainGIForm.myUsername)
+                End If
+            ElseIf UCase(tempControl.ControlType) = "LABEL" Then
+                NewLabel = New Label
+                If TypeName(TheControl) = "Label" Then
+                    NewLabel = TheControl
+                    NewOBJ = DirectCast(NewLabel, System.Windows.Forms.Label)
+                Else
+                    frmMainGIForm.logger.LogError("GI_ERRORS_1_0.log", Application.StartupPath, "Wrong Type - LABEL being cast to:" & TypeName(TheControl), "AddNewControl()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR LOGGED OUT:" & frmMainGIForm.myUsername)
+                End If
+            ElseIf UCase(tempControl.ControlType) = "BTN" Then
+                NewButton = New Button
+                If TypeName(TheControl) = "Button" Then
+                    NewButton = TheControl
+                    NewOBJ = DirectCast(NewButton, System.Windows.Forms.Button)
+                    'Need a static button event in clsControls:
+                Else
+                    frmMainGIForm.logger.LogError("GI_ERRORS_1_0.log", Application.StartupPath, "Wrong Type - BUTTON being cast to:" & TypeName(TheControl), "AddNewControl()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR LOGGED OUT:" & frmMainGIForm.myUsername)
+                End If
+
+            ElseIf UCase(tempControl.ControlType) = "COMBOBOX" Then
+                NewCombo = New ComboBox
+                If TypeName(TheControl) = "ComboBox" Then
+                    NewCombo = TheControl
+                    If AddComboList Then
+                        NewCombo.Items.Clear()
+
+                        If Not IsNothing(ListArray) Then
+                            For IDX = 0 To UBound(ListArray)
+                                If Len(ListArray(IDX)) > 0 Then
+                                    NewCombo.Items.Add(ListArray(IDX))
+                                End If
+                            Next
+                        End If
+                    End If
+                    'AddHandler NewCombo.TextChanged, AddressOf NewCombo_textchanged
+                    tempControl.comboAfterUpdate = NewCombo
+                    NewOBJ = DirectCast(NewCombo, System.Windows.Forms.ComboBox)
+                Else
+                    'Control of wrong type here:
+                    frmMainGIForm.logger.LogError("GI_ERRORS_1_0.log", Application.StartupPath, "Wrong Type - TEXTBOX being cast to:" & TypeName(TheControl), "AddNewControl()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR LOGGED OUT:" & frmMainGIForm.myUsername)
+                End If
+            End If
+        End If
+
+        tempControl.TheControl = NewOBJ
+        tempControl.ControlFrameName = ControlFrameName
+        tempControl.ControlID = CStr(tempControl.ControlDeliveryDate) & "_" & tempControl.ControlDeliveryRef & "_" & tempControl.ControlTAG
+        tempControl.ControlAltID = CStr(tempControl.ControlDeliveryDate) & "_" & tempControl.ControlDeliveryRef & "_" & tempControl.ControlName
+        If UCase(ScrollControlFrame.Name) = UCase("FRAME_FLMDETAILS") And UCase(tempControl.ControlName) = UCase("txtFLMStartTime") Then
+            tempControl.ControlFLMStartDateTime = ControlStartDateTime
+        End If
+        If UCase(ScrollControlFrame.Name) = UCase("FRAME_FLMDETAILS") And UCase(tempControl.ControlName) = UCase("txtFLMFinishTime") Then
+            tempControl.ControlFLMEndDateTime = ControlEndDateTime
+        End If
+        If UCase(ScrollControlFrame.Name) = UCase("FRAME_OPERATIVES") And UCase(tempControl.ControlName) = UCase("txtOperativeStartTime:" & CStr(tempControl.ControlFrameRowNumber)) Then
+            tempControl.ControlOpStartDateTime = ControlStartDateTime
+        End If
+        If UCase(ScrollControlFrame.Name) = UCase("FRAME_OPERATIVES") And UCase(tempControl.ControlName) = UCase("txtOperativeFinishTime:" & CStr(tempControl.ControlFrameRowNumber)) Then
+            tempControl.ControlOpEndDateTime = ControlEndDateTime
+        End If
+
+        CollectionKey = tempControl.ControlTAG
+        If Len(tempControl.ControlDeliveryDate) > 0 Then
+            CollectionKey = tempControl.ControlDeliveryDate & "_" & tempControl.ControlDeliveryRef & "_" & tempControl.ControlTAG
+        ElseIf Len(tempControl.ControlASN) > 0 Then
+            CollectionKey = tempControl.ControlDeliveryDate & "_" & tempControl.ControlASN & "_" & tempControl.ControlTAG
+        End If
+        'ctrlCollection.Add tempControl, tempControl.ControlTag
+        'If Not InCollection("MISSING", ctrlCollection, CollectionKey) Then
+        'ctrlCollection.Add tempControl, CollectionKey
+        'End If
+        If Not dic_Controls.Exists(CollectionKey) Then
+            dic_Controls(CollectionKey) = tempControl
+        Else
+            dic_Controls(CollectionKey) = tempControl
+        End If
+
+        Return AddNewControls + 1
+
+        'Call Error_Report("AddNewControls")
+
+    End Function
+	
+	

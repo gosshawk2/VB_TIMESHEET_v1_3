@@ -1,0 +1,35 @@
+Private Sub ReferenceProgressToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles ReferenceProgressToolStripMenuItem.Click
+        Dim cf As New frmReferenceProgress
+        Dim RefProgForm As Form
+        Dim frmName As String
+        Dim SearchName As String = "ReferenceProgress"
+
+        'Test if child window not already open ?
+        'cf.MdiParent = Me
+
+        'cf.StartPosition = FormStartPosition.CenterParent
+        'cf.Text = "REFERENCE PROGRESS " & CStr(MdiChildren.Count)
+        'cf.Name = "ReferenceProgress"
+        'cf.Show()
+
+        RefProgForm = Get_MDIChildForm(SearchName)
+
+        If Not IsNothing(RefProgForm) Then
+            frmName = RefProgForm.Name
+            If UCase(frmName) = UCase(SearchName) Then
+                'ALREADY OPEN:
+                'Generic Form or Child Forms of the Generic ?
+                Application.OpenForms.Item(SearchName).Activate()
+
+            End If
+        Else
+            RefProgForm = New frmReferenceProgress
+            RefProgForm.Name = SearchName
+            RefProgForm.Text = "Reference Progress"
+            RefProgForm.MdiParent = Me
+            RefProgForm.StartPosition = FormStartPosition.Manual
+            RefProgForm.Show()
+        End If
+
+    End Sub
+	

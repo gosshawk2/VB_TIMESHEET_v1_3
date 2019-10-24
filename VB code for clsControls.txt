@@ -1,0 +1,327 @@
+Private Sub cbTimeStartEvent_click(sender As Object, e As System.EventArgs) Handles cbTimeStartEvent.Click
+        Dim myButton As Button
+        Dim TagNumber As String
+        Dim TimeControl As Control
+        Dim SearchControlName As String
+        Dim TimeOut As DateTime
+        Dim ChangeProperty As String
+        Dim testCollection As Object = Nothing
+        Dim txtControl As TextBox
+
+        SearchControlName = Replace(UCase(cbTimeStartEvent.Name), UCase("btn"), "txt")
+        'Need FindFormControl()
+
+        If TypeOf (sender) Is System.Windows.Forms.Button Then
+            myButton = CType(sender, System.Windows.Forms.Button)
+            'MsgBox("clsControls TIME START BUtton Pressed: " & myButton.Name & ", Caption: " & myButton.Text) 'YES THIS WORKS !!!!!
+            'TimeControl = FindControl(frmGI_RP_Userform, SearchControlName) 'Cannot find for some reason.
+            'TimeControl = SearchFrame(frmGI_RP_Userform.Frame_Operatives, SearchControlName)
+            'TimeControl = frmMainGIForm.FindFrameControls(CPFormName & FormID, SearchControlName)
+            TimeControl = frmMainGIForm.FindFrameControls(CPFormName & FormID, SearchControlName)
+            If TimeControl Is Nothing Then
+                MsgBox("CANNOT FIND START TIME CONTROL")
+            Else
+                txtControl = CType(TimeControl, System.Windows.Forms.TextBox)
+                TagNumber = txtControl.Tag
+                TimeOut = Now()
+                If InStr(UCase(txtControl.Name), "FLM") > 0 Then
+                    Me.ControlFLMStartDateTime = TimeOut
+                    txtControl.Text = Format(TimeOut, "HH:mm:ss")
+                    ChangeProperty = "TheControl"
+                    testCollection = UpdateCollection(dic_Controls, Nothing, txtControl, Me.ControlDeliveryDate, Me.ControlASN,
+                                                      Me.ControlDeliveryRef, TagNumber, ChangeProperty)
+                    If testCollection IsNot Nothing Then
+                        dic_Controls = testCollection
+                    End If
+                    ChangeProperty = "FLMSTARTTIME"
+                    testCollection = UpdateCollection(dic_Controls, Nothing, TimeOut, Me.ControlDeliveryDate, Me.ControlASN,
+                                                      Me.ControlDeliveryRef, TagNumber, ChangeProperty)
+                    If testCollection IsNot Nothing Then
+                        dic_Controls = testCollection
+                    End If
+                ElseIf InStr(ucase(txtControl.Name), "OP") > 0 Then
+                    Me.ControlOpStartDateTime = TimeOut
+                    txtControl.Text = Format(TimeOut, "HH:mm:ss")
+                    ChangeProperty = "TheControl"
+                    testCollection = UpdateCollection(dic_Controls, Nothing, txtControl, Me.ControlDeliveryDate, Me.ControlASN,
+                                                      Me.ControlDeliveryRef, TagNumber, ChangeProperty)
+                    If testCollection IsNot Nothing Then
+                        dic_Controls = testCollection
+                    End If
+                    ChangeProperty = "OpStartTime"
+                    testCollection = UpdateCollection(dic_Controls, Nothing, TimeOut, Me.ControlDeliveryDate, Me.ControlASN,
+                                                      Me.ControlDeliveryRef, TagNumber, ChangeProperty)
+                    If testCollection IsNot Nothing Then
+                        dic_Controls = testCollection
+                    End If
+                Else
+                    Me.ControlErrMessage = "CONTROL: " & txtControl.Name & " , Not handled"
+                    MsgBox("CONTROL NOT HANDLED: " & txtControl.Name)
+                End If
+                cbTimeStartEvent.Enabled = False
+            End If
+        End If
+
+    End Sub
+
+    Private Sub cbTimeEndEvent_click(sender As Object, e As System.EventArgs) Handles cbTimeEndEvent.Click
+        Dim myButton As Button
+        Dim TagNumber As String
+        Dim TimeControl As Control
+        Dim StartTimeControl As Control
+        Dim SearchControlName As String
+        Dim TimeOut As DateTime
+        Dim ChangeProperty As String
+        Dim testCollection As Object = Nothing
+        Dim txtControl As TextBox
+        Dim FLMDetailsFrame As ScrollableControl
+        Dim OpFrame As ScrollableControl
+        Dim dblTotalHours As Double
+        Dim TimeSheetHrs() As String = Nothing
+
+        SearchControlName = Replace(UCase(cbTimeEndEvent.Name), UCase("btn"), "txt")
+        'Need FindFormControl()
+
+        If TypeOf (sender) Is System.Windows.Forms.Button Then
+            myButton = CType(sender, System.Windows.Forms.Button)
+            'MsgBox("clsControls TIME START BUtton Pressed: " & myButton.Name & ", Caption: " & myButton.Text) 'YES THIS WORKS !!!!!
+            'TimeControl = FindControl(frmGI_RP_Userform, SearchControlName) 'Cannot find for some reason.
+            'TimeControl = SearchFrame(frmGI_RP_Userform.Frame_Operatives, SearchControlName)
+            TimeControl = frmMainGIForm.FindFrameControls(CPFormName & FormID, SearchControlName)
+            'The following line produces an exception error if no object:
+            StartTimeControl = frmMainGIForm.FindFrameControls(CPFormName & FormID, "", CStr(TimeControl.Tag - 1))
+            If StartTimeControl IsNot Nothing Then
+                'MsgBox("Found Start Control: " & StartTimeControl.Name)
+            End If
+            If TimeControl Is Nothing Then
+                MsgBox("CANNOT FIND END TIME CONTROL")
+            Else
+                txtControl = CType(TimeControl, System.Windows.Forms.TextBox)
+                TagNumber = txtControl.Tag
+                TimeOut = Now()
+                If InStr(UCase(txtControl.Name), "FLM") > 0 Then
+                    Me.ControlFLMEndDateTime = TimeOut
+                    txtControl.Text = Format(TimeOut, "HH:mm:ss")
+                    ChangeProperty = "TheControl"
+                    testCollection = UpdateCollection(dic_Controls, Nothing, txtControl, Me.ControlDeliveryDate, Me.ControlASN,
+                                                      Me.ControlDeliveryRef, TagNumber, ChangeProperty)
+                    If testCollection IsNot Nothing Then
+                        dic_Controls = testCollection
+                    End If
+                    ChangeProperty = "FLMFINISHTIME"
+                    testCollection = UpdateCollection(dic_Controls, Nothing, TimeOut, Me.ControlDeliveryDate, Me.ControlASN,
+                                                      Me.ControlDeliveryRef, TagNumber, ChangeProperty)
+                    If testCollection IsNot Nothing Then
+                        dic_Controls = testCollection
+                    End If
+                    FLMDetailsFrame = GetFrameControl(CPFormName & FormID, "Frame_FLMDetails")
+                    dblTotalHours = Get_TotalHours(FLMDetailsFrame, Me.ControlDeliveryDate, Me.ControlDeliveryRef, TimeSheetHrs)
+                ElseIf InStr(ucase(txtControl.Name), "OP") > 0 Then
+
+
+                    Me.ControlOpEndDateTime = TimeOut
+                    txtControl.Text = Format(TimeOut, "HH:mm:ss")
+                    ChangeProperty = "TheControl"
+                    testCollection = UpdateCollection(dic_Controls, Nothing, txtControl, Me.ControlDeliveryDate, Me.ControlASN,
+                                                      Me.ControlDeliveryRef, txtControl.Tag, ChangeProperty)
+                    If testCollection IsNot Nothing Then
+                        dic_Controls = testCollection
+                    End If
+                    ChangeProperty = "OPFINISHTIME"
+                    testCollection = UpdateCollection(dic_Controls, Nothing, TimeOut, Me.ControlDeliveryDate, Me.ControlASN,
+                                                      Me.ControlDeliveryRef, txtControl.Tag, ChangeProperty)
+                    If testCollection IsNot Nothing Then
+                        dic_Controls = testCollection
+                    End If
+                    ChangeProperty = "FIELDNAME"
+                    testCollection = UpdateCollection(dic_Controls, Nothing, "OP_FINISHTIME", Me.ControlDeliveryDate, Me.ControlASN,
+                                                      Me.ControlDeliveryRef, txtControl.Tag, ChangeProperty)
+                    If testCollection IsNot Nothing Then
+                        dic_Controls = testCollection
+                    End If
+                    OpFrame = GetFrameControl(CPFormName & FormID, "Frame_Operatives")
+                    dblTotalHours = Get_TotalHours(OpFrame, Me.ControlDeliveryDate, Me.ControlDeliveryRef, TimeSheetHrs)
+                    'Insert into Comments here:
+                    MsgBox("Total Hours: " & dblTotalHours)
+                Else
+                    Me.ControlErrMessage = "CONTROL: " & txtControl.Name & " , Not handled"
+                    MsgBox("CONTROL NOT HANDLED: " & txtControl.Name)
+                End If
+
+            End If
+        End If
+
+    End Sub
+
+    Private Sub txtBoxAfterUpdate_change(sender As Object, e As System.EventArgs) Handles txtBoxAfterUpdate.TextChanged
+        Dim myTEXTBOX As TextBox
+        Dim NewValue As String
+        Dim CollectionKey As String
+        Dim testCollection As Object = Nothing
+        Dim NewFriendlyName As String
+        Dim lblControl As Control
+        Dim FoundControl As Control
+        Dim ChangeProperty As String
+        Dim TagNumber As String
+
+        If TypeOf (sender) Is System.Windows.Forms.TextBox Then
+            myTEXTBOX = CType(sender, System.Windows.Forms.TextBox)
+            'MsgBox("clsCONTROLS = TEXT CHANGED - Control:" & myTEXTBOX.Name & ", value= " & myTEXTBOX.Text) ' YES THIS WORKS !!!!!!!!
+            Me.TextboxName = txtBoxAfterUpdate.Name
+            Me.TextBoxTAG = txtBoxAfterUpdate.Tag
+            Me.TextBoxValue = txtBoxAfterUpdate.Text
+            NewValue = Me.TextBoxValue
+
+            If UCase(Me.ControlName) = UCase("OP_STARTTIME") Then
+                NewValue = Me.ControlDeliveryDate & " " & NewValue
+                FoundControl = frmMainGIForm.FindFrameControls(CPFormName & FormID, Me.ControlName)
+                myTEXTBOX = CType(FoundControl, System.Windows.Forms.TextBox)
+                myTEXTBOX.Text = Format(NewValue, "HH:mm:ss")
+                ChangeProperty = "TheControl"
+                TagNumber = myTEXTBOX.Tag
+                testCollection = UpdateCollection(dic_Controls, Nothing, myTEXTBOX, Me.ControlDeliveryDate, Me.ControlASN,
+                                                      Me.ControlDeliveryRef, TagNumber, ChangeProperty)
+                ChangeProperty = "OpStartTime"
+                testCollection = UpdateCollection(dic_Controls, Nothing, myTEXTBOX, Me.ControlDeliveryDate, Me.ControlASN,
+                                                      Me.ControlDeliveryRef, TagNumber, ChangeProperty)
+            End If
+            If UCase(Me.ControlName) = UCase("OP_FINISHTIME") Then
+                NewValue = Me.ControlDeliveryDate & " " & NewValue
+                FoundControl = frmMainGIForm.FindFrameControls(CPFormName & FormID, Me.ControlName)
+                myTEXTBOX = CType(FoundControl, System.Windows.Forms.TextBox)
+                myTEXTBOX.Text = Format(NewValue, "HH:mm:ss")
+                ChangeProperty = "TheControl"
+                TagNumber = myTEXTBOX.Tag
+                testCollection = UpdateCollection(dic_Controls, Nothing, myTEXTBOX, Me.ControlDeliveryDate, Me.ControlASN,
+                                                      Me.ControlDeliveryRef, TagNumber, ChangeProperty)
+                ChangeProperty = "OPFINISHTIME"
+                testCollection = UpdateCollection(dic_Controls, Nothing, myTEXTBOX, Me.ControlDeliveryDate, Me.ControlASN,
+                                                      Me.ControlDeliveryRef, TagNumber, ChangeProperty)
+            End If
+            'EMPLOYEE NUMBER ENTERED BY USER:
+            If UCase(Me.ControlName) = UCase("txtEmployeeNo") Then
+                If Len(NewValue) > 6 Then
+                    'MsgBox("clsControls: Employee Number Entry - " & NewValue)
+                    'Entry = Me.txtEmployeeNo.Text
+                    SearchAndInsertName(NewValue, Me.ControlDeliveryDate, Me.ControlDeliveryRef, Len(NewValue))
+                End If
+            End If
+
+            If UCase(Me.ControlName) = UCase("txtOperationalComments") Then
+                FoundControl = frmMainGIForm.FindFrameControls(CPFormName & FormID, Me.ControlName)
+                myTEXTBOX = CType(FoundControl, System.Windows.Forms.TextBox)
+                myTEXTBOX.Text = NewValue
+                ChangeProperty = "TheControl"
+                TagNumber = myTEXTBOX.Tag
+                testCollection = UpdateCollection(dic_Controls, Nothing, myTEXTBOX, Me.ControlDeliveryDate, Me.ControlASN,
+                                                      Me.ControlDeliveryRef, TagNumber, ChangeProperty)
+                ChangeProperty = "ControlLabour_Comments"
+                testCollection = UpdateCollection(dic_Controls, Nothing, NewValue, Me.ControlDeliveryDate, Me.ControlASN,
+                                                      Me.ControlDeliveryRef, TagNumber, ChangeProperty)
+            End If
+
+            CollectionKey = Me.ControlDeliveryDate & "_" & Me.ControlDeliveryRef & "_" & Me.TextBoxTAG
+            testCollection = UpdateCollection(dic_Controls, CollectionKey, NewValue, Me.ControlDeliveryDate)
+            If testCollection IsNot Nothing Then
+                dic_Controls = testCollection
+            Else
+                MsgBox("clsControls: CONTROL IS Nothing")
+            End If
+            NewFriendlyName = Replace(Me.TextboxName, "txt", "lbl")
+            lblControl = frmMainGIForm.FindFrameControls(CPFormName & FormID, NewFriendlyName)
+            If lblControl IsNot Nothing Then
+                frmMainGIForm.InsertValueIntoForm(CPFormName & FormID, "txtControlName", lblControl.Text & ":")
+            Else
+                frmMainGIForm.InsertValueIntoForm(CPFormName & FormID, "txtControlName", Me.TextboxName & ":")
+            End If
+            frmMainGIForm.InsertValueIntoForm(CPFormName & FormID, "txtControlValue", NewValue)
+            dic_AnyChanges(FormID) = "YES"
+        End If
+
+    End Sub
+
+    Private Sub comboAfterUpdate_change(sender As Object, e As System.EventArgs) Handles comboAfterUpdate.TextChanged
+        Dim myComboBox As ComboBox
+        Dim NewValue As String
+        Dim CollectionKey As String
+        Dim testCollection As Object = Nothing
+        Dim NewFriendlyName As String
+        Dim lblControl As Control
+        Dim comboCollection() As String = Nothing
+        Dim IDX As Integer
+
+        ReDim comboCollection(1)
+        If TypeOf (sender) Is System.Windows.Forms.ComboBox Then
+            myComboBox = CType(sender, System.Windows.Forms.ComboBox)
+            'MsgBox("clsControls = COMBO CHANGED - Control:" & myComboBox.Name & ", value= " & myComboBox.Text) 'YEA THIS WORKS !!!!!!
+            Me.ComboBoxName = comboAfterUpdate.Name
+            Me.ComboTAG = comboAfterUpdate.Tag
+            Me.ComboValue = comboAfterUpdate.Text
+            NewValue = Me.ComboValue
+            IDX = myComboBox.Items.IndexOf(NewValue)
+            If IDX > -1 Then
+                NewValue = myComboBox.Items(IDX)
+            End If
+            'SEARCH LIST for entry - if found - enter FULL ENTRY, if not insert user entry in NewValue:
+            comboCollection = (From item As String In myComboBox.Items Select item).ToArray
+
+
+            CollectionKey = Me.ControlDeliveryDate & "_" & Me.ControlDeliveryRef & "_" & Me.ComboTAG
+            testCollection = UpdateCollection(dic_Controls, CollectionKey, NewValue, Me.ControlDeliveryDate) 'VALUE is default
+            If testCollection IsNot Nothing Then
+                dic_Controls = testCollection
+            Else
+                MsgBox("clsControls: Combo IS Nothing")
+            End If
+            'If Me.ComboTAG = "40" Then
+            ' testCollection = UpdateCollection(dic_Controls, CollectionKey, NewValue, Me.ControlDeliveryDate, "", "", "", "FLM_NAME") 'VALUE is default
+            'If testCollection IsNot Nothing Then
+            'dic_Controls = testCollection
+            'Else
+            'MsgBox("clsControls: Combo IS Nothing")
+            'End If
+            'End If
+            NewFriendlyName = Replace(Me.ComboBoxName, "com", "lbl")
+            lblControl = frmMainGIForm.FindFrameControls(CPFormName & FormID, NewFriendlyName)
+            If lblControl IsNot Nothing Then
+                frmMainGIForm.InsertValueIntoForm(CPFormName & FormID, "txtControlName", lblControl.Text)
+            Else
+                frmMainGIForm.InsertValueIntoForm(CPFormName & FormID, "txtControlName", Me.TextboxName)
+            End If
+            frmMainGIForm.InsertValueIntoForm(CPFormName & FormID, "txtControlValue", NewValue)
+            'lblControl = frmMainGIForm.FindFrameControls(ControlPanelFormName & FormID, NewFriendlyName)
+            'If lblControl IsNot Nothing Then
+            'frmMainGIForm.InsertValueIntoForm(ControlPanelFormName & FormID, "txtControlName", lblControl.Text & ":")
+            'Else
+            'frmMainGIForm.InsertValueIntoForm(ControlPanelFormName & FormID, "txtControlName", Me.ComboBoxName & ":")
+            'End If
+            'frmMainGIForm.InsertValueIntoForm(ControlPanelFormName & FormID, "txtControlValue", NewValue)
+        End If
+    End Sub
+
+    Private Sub comboAfterUpdate2_MouseWheel(sender As Object, e As MouseEventArgs) Handles comboAfterUpdate2.MouseWheel
+        Dim HMEA As HandledMouseEventArgs = DirectCast(e, HandledMouseEventArgs)
+
+        MsgBox("IN MOUSE WHEEL EVENT")
+        HMEA.Handled = True
+    End Sub
+
+    Public Property TextboxName() As String
+        Get
+            Return _txtboxNameOfChangedValue
+        End Get
+        Set(value As String)
+            _txtboxNameOfChangedValue = value
+        End Set
+    End Property
+
+    Public Property ComboBoxName() As String
+        Get
+            Return _comboNameOfChangedValue
+        End Get
+        Set(value As String)
+            _comboNameOfChangedValue = value
+        End Set
+    End Property
+	
+	

@@ -1,0 +1,19 @@
+T2 Operative Skills Matrix spreadsheet to get names.
+fields:
+Colleagues
+Department
+
+Tracy to give me password.
+
+Adam Barnett - TGW chap to see about the BARCODE sensor - barcoding all equipment !
+Asset problem solved - already being used for the TOTES when they get returned - going through the blue archway
+records all the barcodes etc.
+
+ROLLED
+Could be on grid but not touched yet - ??? (NOT ROLLED but something else) - UNLOADED ???
+
+Priority Delivery Code / REason:
+a tick box. YES = Work on immediately.
+also a comment box for NO = work on it tomorrow or later at a specific time.
+TAM2 - Operations - Operative SKills - T2 Operative SKills Matrix.
+

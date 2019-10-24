@@ -1,0 +1,22 @@
+If FoundSessionID Then
+            strDateLoggedIn = ReturnValue
+            dtDateLoggedIn = CDate(strDateLoggedIn)
+            dtDateLoggedOut = CDate(strDateLoggedOut)
+            SPAN = dtDateLoggedOut.Subtract(dtDateLoggedIn)
+            dtMinutesDiff = DateDiff(DateInterval.Minute, dtDateLoggedIn, dtDateLoggedOut)
+            DecHours = Math.Abs(dtMinutesDiff) / 60
+            DecMinutes = Math.Abs(dtMinutesDiff) Mod 60
+            If DecHours < 1 Then
+                strHours = "0"
+            Else
+                Dim theRounded = Math.Sign(DecHours) * Math.Floor(Math.Abs(DecHours) * 100) / 100.0
+                intHours = CInt(theRounded)
+                strHours = CStr(intHours)
+                'hmmm hours still ending up as 1.34 and 5.6 etc.
+            End If
+            strMins = CStr(DecMinutes)
+
+            strLoggedInDuration = SPAN.Hours & "h " & SPAN.Minutes & "m " & SPAN.Seconds & "s "
+
+        End If
+		

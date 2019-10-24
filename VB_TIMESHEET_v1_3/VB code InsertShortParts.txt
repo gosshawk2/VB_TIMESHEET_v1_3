@@ -1,0 +1,186 @@
+Sub InsertShortParts(AddNewRow As Boolean, strDeliveryDate As String, strDeliveryRef As String, strASNNo As String, ShortFrameControl As ScrollableControl,
+                         Optional ByRef PassedTotalRows As Long = 0,
+                         Optional ByVal TimeStartTAG As Long = 1000, Optional ByVal LowerTag As Long = 1001,
+                         Optional ByVal ControlsPerRow As Long = 3, Optional ByVal StartFieldIndex As Long = 3,
+                         Optional ByVal PartNo As String = "", Optional ByVal PartQty As String = "")
+        Dim ShortID As Long = 0
+        Dim UpperTAG As Long
+        Dim FieldNames As String
+        Dim ErrMessage As String = ""
+        Dim StartBtnTAG As Long = 0
+        Dim HighestShortTag As Long = 0
+        Dim TotalControlsInFrame As Long = 0
+        Dim tempTotals As clsTotals
+        Dim ControlDBTable As String
+        Dim dtDeliveryDate As DateTime
+        Dim TotalRows As Long
+        Dim searchtext = strDeliveryRef
+        Dim SearchField As String = "DeliveryReference"
+        Dim FieldType As String = "STRING"
+        Dim ReturnField As String = "ID"
+        Dim ReturnValue As String = ""
+        Dim SearchCriteria As String = ""
+        Dim SortFields As String = ""
+        Dim Reversed As Boolean = False
+        Dim ExcludeFields As String = ""
+        Dim strShortTotalRows As String
+        Dim lngShortTotalRows As Long
+        Dim ShortLoadedOK As Boolean = False
+        Dim ShortSavedOK As Boolean = False
+        Dim AllValues() As Object
+        Dim AllFields() As String
+        Dim TotalRowsFromQuery As Long
+        Dim NewFrameRowNumber As Long
+        Dim strShortPartNo As String
+        Dim strShortQTY As String
+        Dim ShortRecID As String
+        Dim ControlTotalRows As Long
+        Dim dtLastSaved As DateTime
+        Dim ShortFields As String
+        Dim ShortValues As String
+        Dim SaveCriteria As String
+        Dim SaveDeliveryDate As String
+
+
+        'Need to calculate the UPPER TAG from TOTAL OPERATIVES and Total Number of controls in the FRAME_OPERATIVES:
+        'THIS IS THE PROC THAT GETS CALLED FROM THE MAIN CONTROL PANEL !!!
+
+        LowerTag = 1001
+        UpperTAG = 0
+        'TotalRows = 0
+        StartBtnTAG = 0
+        HighestShortTag = 0
+        TimeStartTAG = 1000
+
+        If PassedTotalRows = 0 Then
+            TotalRows = 1
+        End If
+
+        If Len(strDeliveryDate) = 0 Then
+            MsgBox("Delivery Date is Blank")
+            Exit Sub
+        End If
+
+        dtDeliveryDate = CDate(strDeliveryDate)
+        strDeliveryDate = dtDeliveryDate.ToString("dd/MM/yyyy")
+        ControlDBTable = "tblshortsandextraparts"
+        SaveDeliveryDate = dtDeliveryDate.ToString("yyyy-MM-dd HH:mm:ss")
+
+        searchtext = strDeliveryRef
+        SearchField = "DeliveryReference"
+        FieldType = "STRING"
+        ReturnField = "ID"
+        ReturnValue = ""
+        SearchCriteria = "ShortOrExtra = " & Chr(34) & "SHORT" & Chr(34)
+        SearchCriteria = SearchCriteria & " AND FrameRowNumber = " & PassedTotalRows
+        SortFields = ""
+        Reversed = False
+        ExcludeFields = ""
+        AllValues = Nothing
+        AllFields = Nothing
+        ShortRecID = ""
+
+        ShortLoadedOK = Find_myQuery(frmMainGIForm.myConnString, ControlDBTable, SearchField, searchtext, FieldType, ReturnField, ShortRecID,
+                                         AllValues, AllFields, SearchCriteria, SortFields, Reversed, ErrMessage, "=", TotalRowsFromQuery)
+        strShortTotalRows = ""
+        strShortPartNo = ""
+        strShortQTY = ""
+        If ShortLoadedOK Then
+            'A SHORT PART record exists - get total rows and get the PART NO and QTY:
+            strShortTotalRows = GetMYValuebyFieldname(AllValues, AllFields, "Total_Rows")
+            strShortPartNo = GetMYValuebyFieldname(AllValues, AllFields, "PartNo")
+            strShortQTY = GetMYValuebyFieldname(AllValues, AllFields, "Qty")
+            HighestShortTag = GetMYValuebyFieldname(AllValues, AllFields, "EndTAGID")
+            If IsNumeric(strShortTotalRows) Then
+                lngShortTotalRows = CLng(strShortTotalRows)
+            Else
+                lngShortTotalRows = 0
+            End If
+        End If
+
+        tempTotals = dic_Totals(strDeliveryDate & "_" & strDeliveryRef)
+        If AddNewRow Then
+            If dic_Totals(strDeliveryDate & "_" & strDeliveryRef) IsNot Nothing Then
+
+                TotalRows = tempTotals.Total_ShortParts + 1
+                HighestShortTag = tempTotals.HighestShortTAGID
+            Else
+                TotalRows = 0
+            End If
+        Else
+            'LOADED FROM DB:
+            If lngShortTotalRows > 0 Then
+                TotalRows = lngShortTotalRows
+                If Not dic_Totals(strDeliveryDate & "_" & strDeliveryRef).exists Then
+                    tempTotals.Total_ShortParts = TotalRows
+                    dic_Totals(strDeliveryDate & "_" & strDeliveryRef) = tempTotals
+                End If
+                If dic_Totals(strDeliveryDate & "_" & strDeliveryRef) IsNot Nothing Then
+                    tempTotals = dic_Totals(strDeliveryDate & "_" & strDeliveryRef)
+                    tempTotals.Total_ShortParts = TotalRows
+
+                    'HighestShortTag should already have. else if no record found then it should be 0.
+                Else
+                    'problem with DIC_TOTALS() - is nothing for THIS reference.
+                    TotalRows = 0
+                End If
+            Else
+                TotalRows = 1
+            End If
+        End If
+        'when totalrows = 0 then shortid will have to be 1 as it is the row number.
+        StartFieldIndex = 3
+        If TotalRows = 0 Then
+            UpperTAG = ((1 * ControlsPerRow) - 1) + LowerTag
+            ShortID = 1
+            HighestShortTag = 1003
+        Else
+            UpperTAG = ((TotalRows * ControlsPerRow) - 1) + LowerTag
+            ShortID = TotalRows
+        End If
+        TotalControlsInFrame = Math.Abs(TotalRows * ControlsPerRow)
+        controltotalrows = TotalRows
+        NewFrameRowNumber = TotalRows
+
+        tempTotals.Total_ShortParts = TotalRows
+        dic_Totals(strDeliveryDate & "_" & strDeliveryRef) = tempTotals
+
+        AddNewShorts(TotalRows, ShortFrameControl, ShortID, HighestShortTag, StartBtnTAG,
+                            strDeliveryDate, strDeliveryRef, strASNNo, LowerTag, UpperTAG, TimeStartTAG, ShortAndExtraFieldnames,
+                        TotalRows, StartFieldIndex, False, ErrMessage, 0, PartNo, PartQty)
+        tempTotals.HighestShortTAGID = HighestShortTag
+        'frmMainGIForm.Dic_HighestOpBtnTAGID(strDeliveryDate & "_" & strDeliveryRef) = StartBtnTAG
+        frmMainGIForm.InsertValueIntoForm("GI_TIMESHEET", "txtTotalShorts", CStr(TotalRows - 1))
+        'TOTALS is nothing ?????
+
+        dtLastSaved = Now()
+        ShortFields = "DeliveryDate,DeliveryReference,FrameRowNumber,TotalRows,ShortOrExtra,Start_TAGID,END_TAGID,LastSaved"
+        'ShortFields = "Total_Rows,Start_TAGID,END_TAGID,UpdatedByUsername,UpdatedByEmpNo,UpdatedByName,LastSaved"
+        'LabourFieldValues = Chr(34) & ControlTotalRows & Chr(34)
+        ShortValues = Chr(39) & SaveDeliveryDate & Chr(39) & "," & Chr(34) & strDeliveryRef & Chr(34) & "," & NewFrameRowNumber & ","
+        ShortValues = ShortValues & "," & Chr(34) & "Short" & "," & ControlTotalRows & "," & LowerTag & "," & UpperTAG
+        'ShortValues = ShortValues & "," & Chr(34) & strUsername & Chr(34) & "," & Chr(34) & strEMPNO & Chr(34) & "," & Chr(34) & strNAME & Chr(34)
+        ShortValues = ShortValues & "," & Chr(39) & dtLastSaved.ToString("yyyy-MM-dd HH:mm:ss") & Chr(39)
+        If Len(ShortRecID) > 0 Then
+            SaveCriteria = "ID = " & ShortRecID
+        Else
+            SaveCriteria = ""
+        End If
+
+        If Len(ErrMessage) > 0 Then
+            MsgBox("Error;" & ErrMessage)
+            Exit Sub
+        End If
+
+        ShortSavedOK = InsertUpdateMyRecord(ShortLoadedOK, frmMainGIForm.myConnString, ControlDBTable, ShortFields, ShortValues, ErrMessage, SaveCriteria, ExcludeFields)
+        If Not ShortSavedOK Then
+            frmMainGIForm.logger.LogError("GI_ERRORS_1_0.log", Application.StartupPath, ErrMessage, "ShortSavedOK: InsertShortParts()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR LOGGED OUT:" & frmMainGIForm.myUsername)
+        Else
+            'MsgBox("OK INSERTED SHORT record")
+            frmMainGIForm.txtMessages.Text = "OK INSERTED SHORT record"
+        End If
+
+
+    End Sub
+	
+	

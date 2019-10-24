@@ -1,0 +1,77 @@
+Function PrepareMyInsert(ByVal connString As String, ByVal DBTable As String, ByRef Fieldnames As String, ByVal Fieldvalues As String,
+                             ByRef myMessage As String,
+                             Optional ByRef ExcludeFields As String = "",
+                             Optional ByVal ElementStartIDX As Integer = 0,
+                             Optional ByVal EncaseFields As Boolean = True,
+                             Optional ByVal RemoveBadChars As Boolean = True,
+                             Optional ByVal IncludeComma As Boolean = True,
+                             Optional ByVal IncludeQuotes As Boolean = False) As String
+        Dim FieldNameArray As String()
+        Dim IgnoreFieldsArray As String()
+        Dim ValueArray As String()
+        Dim FinalCMD As String
+        Dim IDX As Integer
+        Dim fldName As String
+        Dim NumFields As Integer
+        Dim NewFieldsArray As String()
+
+        FinalCMD = ""
+        ReDim FieldNameArray(1)
+        ReDim NewFieldsArray(1)
+        ReDim IgnoreFieldsArray(1)
+        Try
+            If Len(ExcludeFields) > 0 Then
+                IgnoreFieldsArray = strToStringArray(ExcludeFields, ",")
+            End If
+            If Len(DBTable) = 0 Then
+                'MsgBox("Error in PrepareInsert: No Database Table specified", vbOK, "Error in Asset Register")
+                myMessage = "Error in PrepareInsert: No Database Table specified"
+                frmMainGIForm.logger.LogError("GI_Error_v1_1.log", Application.StartupPath, myMessage, "PrepareMyInsert()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR Logged in:" & frmMainGIForm.myUsername)
+                PrepareMyInsert = ""
+                Exit Function
+            End If
+            If Len(Fieldnames) = 0 Then
+                Fieldnames = GetMyFields(DBTable, connString, myMessage)
+            End If
+            FieldNameArray = strToStringArray(Fieldnames, ",")
+            If Len(Fieldvalues) > 0 Then
+                ValueArray = strToStringArray(Fieldvalues, ",", ElementStartIDX, EncaseFields, RemoveBadChars, IncludeComma, "_", IncludeQuotes)
+            Else
+                'MsgBox("Error in PrepareInsert: No values specified", vbOK, "Error in Asset Register")
+                myMessage = "Error in PrepareInsert: No values specified"
+                PrepareMyInsert = ""
+                Exit Function
+            End If
+            Fieldnames = RemoveExtractedFields(FieldNameArray, IgnoreFieldsArray, ",", FieldNameArray)
+            If UBound(FieldNameArray) > 0 And UBound(ValueArray) > 0 Then
+
+                If UBound(FieldNameArray) < UBound(ValueArray) Then 'Unlikely - as this means too many values passed
+                    'MsgBox("Error in PrepareInsert: Number of Fields passed are LESS THAN Number of Values Passed.", vbOK, "MISS-MATCH Error in Asset Register")
+                    'PrepareInsert = ""
+                    'Exit Function
+                    myMessage = myMessage & vbCrLf & "Error in PrepareInsert: Number of VALUES passed EXCEED Number of Fields in database."
+                    frmMainGIForm.logger.LogError("GI_Error_v1_1.log", Application.StartupPath, myMessage, "PrepareMyInsert()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR Logged in:" & frmMainGIForm.myUsername)
+                    'frmMainGIForm.logger.
+                End If
+                If UBound(FieldNameArray) > UBound(ValueArray) Then
+                    myMessage = "Error in PrepareInsert: Number of Fields passed are GREATER THAN Number of Values Passed."
+                    frmMainGIForm.logger.LogError("GI_Error_v1_1.log", Application.StartupPath, myMessage, "PrepareMyInsert()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR Logged in:" & frmMainGIForm.myUsername)
+                    'Not necessarily an Error but the Number of VALUES passed is LESS THAN Number of Fields in Database.
+                    'So use WHILE IDX < UBOUND(ValueArray) 
+                    'rather than IDX < Ubound(FieldNameArray) 
+                    'PrepareInsert = ""
+                    'Exit Function
+                End If
+            End If
+            IDX = 0
+            FinalCMD = "INSERT INTO " & DBTable & " (" & Fieldnames & ") VALUES (" & Fieldvalues & ")"
+            'MsgBox("FinalCMD = " & FinalCMD)
+        Catch ex As Exception
+            'MsgBox("Error Exception in PrepareInsert: " & ex.ToString, vbOK, "Exception Error in Asset Register")
+            myMessage = myMessage & vbCrLf & "Error Exception in PrepareInsert: " & ex.ToString & ", FinalCMd= " & FinalCMD
+            frmMainGIForm.logger.LogError("GI_Error_v1_1.log", Application.StartupPath, myMessage, "PrepareMyInsert()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR Logged in:" & frmMainGIForm.myUsername)
+        End Try
+        PrepareMyInsert = FinalCMD
+
+
+    End Function

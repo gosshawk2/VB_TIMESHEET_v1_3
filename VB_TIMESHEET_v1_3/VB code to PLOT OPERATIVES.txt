@@ -1,0 +1,145 @@
+ControlRowNumber = 1
+TagNumber = OpStartTAG
+ControlStartTAG = CStr(TagNumber)
+ControlTotalRows = OpTotalRows
+Do While ControlRowNumber <= OpTotalRows
+            SearchCriteria = "FrameRowNumber = " & ControlRowNumber
+            LoadedOK(4) = Find_myQuery(frmMainGIForm.myConnString, DBTables(4), SearchField, SearchText, FieldType, ReturnField, ReturnValue, AllValues,
+                                   AllFields, SearchCriteria, SortFields, Reversed, ErrMessage)
+            If LoadedOK(4) Then
+                'tblOperatives: - extract Operative info and using some of the previous info from tblLaourHours - totalrows and starttag and endtag.
+                FieldIDX = 4
+                TimeTagNumber = 0
+                ControlFieldname = AllFields(FieldIDX)
+                OpName = GetMYValuebyFieldname(AllValues, AllFields, "Op_Name")
+                strResult = GetMYValuebyFieldname(AllValues, AllFields, "Op_StartTime")
+                If IsDate(strResult) Then
+                    dtStartTime = CDate(strResult)
+                Else
+                    dtStartTime = CDate("1970-01-01 01:00:00")
+                End If
+                strResult = GetMYValuebyFieldname(AllValues, AllFields, "Op_FinishTime")
+                If IsDate(strResult) Then
+                    dtEndTime = CDate(strResult)
+                Else
+                    dtEndTime = CDate("1970-01-01 01:00:00")
+                End If
+                InsertOperatives(strDeliveryDate, strDeliveryRef, ControlASN, Frame_Operatives, LastRow, 400, OpStartTAG, 6, FieldIDX,
+                                OpName, dtStartTime, dtEndTime)
+
+                Do While FieldIDX <= 9
+                    'TagNumber = TagNumber + 1
+                    TimeTagNumber = 0
+
+                    ControlFieldname = AllFields(FieldIDX)
+                    strResult = GetMYValuebyFieldname(AllValues, AllFields, ControlFieldname)
+                    If UCase(ControlFieldname) = UCase("Op_StartTime") Then
+                        TimeTagNumber = TagNumber + 400
+                        ControlTAG = CStr(TimeTagNumber)
+                        ControlType = "TEXTBOX"
+                        dtStartTime = CDate(strResult)
+                        strResult = dtStartTime.ToString("HH:mm:ss")
+                        OpStartTime = strResult
+                    End If
+                    If UCase(ControlFieldname) = UCase("Op_FinishTime") Then
+                        TimeTagNumber = TagNumber + 400
+                        ControlTAG = CStr(TimeTagNumber)
+                        ControlType = "TEXTBOX"
+                        dtEndTime = CDate(strResult)
+                        strResult = dtEndTime.ToString("HH:mm:ss")
+                        OpEndTime = strResult
+                    End If
+                    If TimeTagNumber > 0 Then
+                        FoundCtrl = frmMainGIForm.FindControls("GI_TIMESHEET", CStr(TimeTagNumber), ChildCtrl)
+                    Else
+                        FoundCtrl = frmMainGIForm.FindControls("GI_TIMESHEET", CStr(TagNumber), ChildCtrl)
+                    End If
+                    If FoundCtrl IsNot Nothing Then
+                        frmMainGIForm.InsertValueIntoForm("GI_TIMESHEET", FoundCtrl.Name, strResult)
+                        strResult = GetMYValuebyFieldname(AllValues, AllFields, ControlFieldname)
+                        'Find correct field to put value into now.
+                        'ControlTAG = CStr(TagNumber)
+                        If UCase(ControlFieldname) = UCase("FrameRowNumber") Then
+                            ControlType = "TEXTBOX"
+                        End If
+                        If UCase(ControlFieldname) = UCase("Op_Name") Then
+                            ControlType = "COMBOBOX"
+                            OpName = strResult
+                        End If
+                        If UCase(ControlFieldname) = UCase("Activity_Name") Then
+                            ControlType = "COMBOBOX"
+
+                        End If
+                        If UCase(ControlFieldname) = UCase("OpComments") Then
+                            ControlType = "TEXTBOX"
+                        End If
+
+                        ControlText = strResult
+                        'put value into control:
+
+                        'Insert into Dic_Controls:
+
+                        varKeyRef = strDeliveryDate & "_" & strDeliveryRef & "_" & TagNumber 'not correct if Time is the field  - not adding 400.
+                        ControlName = FoundCtrl.Name
+                        'ControlTAG = CStr(TagNumber)
+                        ControlText = strResult
+                        ControlLeft = FoundCtrl.Left
+                        ControlTop = FoundCtrl.Top
+                        ControlWidth = FoundCtrl.Width
+                        ControlHeight = FoundCtrl.Height
+                        ControlOBJCount = TagNumber ' will record 46 rather than 446 for the time.
+                        ControlStartTAG = CStr(OpStartTAG)
+                        ControlEndTAG = CStr(OpFinishTAG)
+                        'ControlStartTAG = CStr(OpStartTAG)
+                        'ControlEndTAG = CStr(OpFinishTAG)
+                        'OpTotalRows = GetMYValuebyFieldname(AllValues, AllFields, "Total_Rows")
+                        ListArray = Nothing
+                        ControlBACKCOLOUR = System.Drawing.ColorTranslator.ToWin32(FoundCtrl.BackColor)
+                        ControlForeColor = System.Drawing.ColorTranslator.ToWin32(FoundCtrl.ForeColor)
+                        ControlFontName = FoundCtrl.Font.Name
+                        ControlFontSize = FoundCtrl.Font.Size
+                        If FoundCtrl.Font.Bold Then
+                            ControlFontStyle = "BOLD"
+                        Else
+                            ControlFontStyle = "NORMAL"
+                        End If
+                        If FoundCtrl.Font.Italic Then
+                            ControlFontStyle = ControlFontStyle & "," & "ITALIC"
+                        End If
+                        If FoundCtrl.Font.Underline Then
+                            ControlFontStyle = ControlFontStyle & "," & "UNDERLINE"
+                        End If
+                        If FoundCtrl.Font.Strikeout Then
+                            ControlFontStyle = ControlFontStyle & "," & "STRIKEOUT"
+                        End If
+                        If TypeOf (FoundCtrl) Is TextBox Then
+                            NewTextBox = DirectCast(FoundCtrl, System.Windows.Forms.TextBox)
+                            If NewTextBox.TextAlign = HorizontalAlignment.Left Then
+                                ControlTextAlign = "LEFT"
+                            ElseIf NewTextBox.TextAlign = HorizontalAlignment.Center Then
+                                ControlTextAlign = "CENTER"
+                            ElseIf NewTextBox.TextAlign = HorizontalAlignment.Right Then
+                                ControlTextAlign = "RIGHT"
+                            Else
+                                ControlTextAlign = ""
+                            End If
+                        End If
+
+                        NewIndex = AddNewControl(False, Frame_Operatives, DBTables(4), ControlFieldname, "ID", FoundCtrl, ControlName,
+                            ControlText, ControlType, ControlTAG, ControlDate, ControlLeft, ControlTop,
+                            ControlWidth, ControlHeight, ControlDeliveryDate, ControlDeliveryRef, ControlASN,
+                            ControlOBJCount, ControlStartTAG, ControlEndTAG, ControlRowNumber, ControlTotalRows,
+                                        True, ListArray, ControlBACKCOLOUR, False, ControlFontName, ControlFontSize,
+                            ControlFontStyle, ControlForeColor, ControlTextAlign, "MIDDLE CENTER", False, False, dtStartTime, dtEndTime)
+                    End If 'FoundCtrl
+                    FieldIDX = FieldIDX + 1
+                    TagNumber = TagNumber + 1
+
+                Loop
+                'TagNumber = TagNumber + 1
+            End If
+            frmMainGIForm.InsertValueIntoForm("GI_TIMESHEET", "txtTotalOps", CStr(ControlRowNumber))
+            ControlRowNumber = ControlRowNumber + 1
+Loop
+		
+		

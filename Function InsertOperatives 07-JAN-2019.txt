@@ -1,0 +1,379 @@
+Function InsertOperatives(AddNewRow As Boolean, strDeliveryDate As String, strDeliveryRef As String, strASNNo As String, OpFrameControl As ScrollableControl,
+                         ByVal FrameRowNumber As Long,
+                         Optional ByVal TimeStartTAG As Long = 400, Optional ByVal LowerTag As Long = 43,
+                         Optional ByVal ControlsPerRow As Long = 6, Optional ByVal StartFieldIndex As Long = 4,
+                         Optional ByVal OpName As String = "",
+                         Optional ByVal OpActivity As String = "",
+                         Optional ByVal dtStartTime As Date = #1970-01-01#, Optional dtFinishTime As Date = #1970-01-01#,
+                         Optional ByVal OpComment As String = "None.",
+                         Optional ByRef StartTABIndex As Long = 0,
+                         Optional ByVal ResetFieldIndexTo4 As Boolean = True,
+                         Optional ByVal DisableStartButton As Boolean = False,
+                         Optional ByVal DisableFinishButton As Boolean = False,
+                         Optional ByVal DisableStartTimeEntry As Boolean = True,
+                         Optional ByVal DisableFinishTimeEntry As Boolean = True,
+                         Optional ByVal FormName As String = "GI_TIMESHEET_") As Long
+        Dim UpperTAG As Long
+        Dim FieldNames As String
+        Dim ErrMessage As String = ""
+        Dim StartBtnTAG As Long = 0
+        Dim HighestOpTag As Long = 0
+        Dim TotalControlsInFrame As Long = 0
+        Dim SearchText As String = ""
+        Dim SearchField As String = ""
+        Dim FieldType As String = "STRING"
+        Dim ReturnField As String = "ID"
+        Dim ReturnValue As String
+        Dim SearchCriteria As String = ""
+        Dim SortFields As String
+        Dim Reversed As Boolean = False
+        Dim ExcludeFields As String
+        Dim LabourFieldsArr() As String
+        Dim OpLoadedOK As Boolean = False
+        Dim LabLoadedOK As Boolean = False
+        Dim ControlDBTable As String = "tblOperatives"
+        Dim OpDBTable As String = "tblOperatives"
+        Dim LabourDBTable As String = "tblLabourHours"
+        Dim LabourRecID As String = ""
+        Dim OpRecID As String = ""
+        Dim LabAllValues() As Object = Nothing
+        Dim LabAllFields() As String = Nothing
+        Dim OpAllValues() As Object = Nothing
+        Dim OpAllFields() As String = Nothing
+        Dim OpSaveCriteria As String
+        Dim LabSaveCriteria As String
+        Dim LabourFields As String
+        Dim LabourFieldValues As String
+        Dim OpFields As String
+        Dim OpFieldValues As String
+        Dim ControlTotalRows As Long = 0
+        Dim dtNow As DateTime
+        Dim dtDeliveryDate As DateTime
+        Dim LabourSavedOK As Boolean = False
+        Dim OpSavedOK As Boolean = False
+        Dim NewFrameRowNumber As Long = 0
+        Dim localOPID As Long
+        Dim ExtractTotals As New clsTotals
+        Dim tempControl As New clsControls
+        Dim dtLastSaved As DateTime
+        Dim strLastSaved As String
+        Dim strSavedDeliveryDate As String
+        Dim strUsername As String
+        Dim strNAME As String
+        Dim strEMPNO As String
+        Dim strControlKey As String
+        Dim strTotalRows As String
+        Dim strFLMTotalRows As String
+        Dim lngFLMTotalRows As Long
+        Dim ControlTABIndex As Long
+        Dim strSQL As String
+        Dim ReturnFromSql As Object
+        Dim OpTotalRows As Long
+        Dim ChangeProperty As String
+        Dim ControlName As String
+        Dim testCollection As Object
+        Dim OpControl As Control
+        Dim TotalRows As Long
+        Dim FieldIndex As Long
+
+        'Need to calculate the UPPER TAG from TOTAL OPERATIVES and Total Number of controls in the FRAME_OPERATIVES:
+        InsertOperatives = 0
+
+        UpperTAG = 0
+        'TotalRows = 0
+        StartBtnTAG = 0
+        HighestOpTag = 0
+        ControlTABIndex = StartTABIndex
+
+        If Len(strDeliveryDate) = 0 Then
+            MsgBox("Delivery Date not supplied")
+            Exit Function
+        End If
+
+        If ResetFieldIndexTo4 Then
+            FieldIndex = 4
+        Else
+            FieldIndex = StartFieldIndex
+        End If
+
+        strDeliveryDate = CDate(strDeliveryDate).ToString("dd/MM/yyyy")
+
+        'tblLabourHours search:
+        If Len(strDeliveryRef) > 0 Then
+            'SearchText = CDate(strDeliveryDate).ToString("yyyy-MM-dd HH:mm:ss")
+            strSavedDeliveryDate = CDate(strDeliveryDate).ToString("yyyy-MM-dd HH:mm:ss")
+            SearchText = strDeliveryRef
+            SearchField = "DeliveryReference"
+            FieldType = "STRING"
+            ReturnField = "ID"
+            ReturnValue = ""
+            SearchCriteria = ""
+            SortFields = "DeliveryDate"
+            Reversed = True
+        Else
+            strSavedDeliveryDate = CDate("1970-01-01 00:00:00")
+        End If
+
+        SortFields = ""
+        Reversed = False
+        ExcludeFields = ""
+
+        'LabourFieldsArr = strToStringArray(frmMainGIForm., ",", 0, False, False, False, "_", False, 34, 39)
+
+        OpTotalRows = Get_TotalRows("tblOperatives", strDeliveryRef)
+
+        LabLoadedOK = Find_myQuery(frmMainGIForm.myConnString, LabourDBTable, SearchField, SearchText, FieldType, ReturnField, LabourRecID, LabAllValues,
+            LabAllFields, SearchCriteria, SortFields, Reversed, ErrMessage)
+
+        strFLMTotalRows = GetMYValuebyFieldname(LabAllValues, LabAllFields, "Total_Rows") 'FROM FLM DETAILS TABLE: tblLabourHours
+        If IsNumeric(strFLMTotalRows) Then
+            'SO TotalRows will be comming from the tblLabourHours table - THIS will be the current amount of Operatives.
+            lngFLMTotalRows = CLng(strFLMTotalRows)
+        Else
+            lngFLMTotalRows = 0
+        End If
+        ' - OK first we have strFLMTotalRows -> lngFLMTotalRows = Total amount of rows in the table that has just loaded;
+        ' - This procedure is repeated while the correct number of rows are being inserted inside the loop until lngFLMTotalRows.
+        ExtractTotals = dic_Totals(strDeliveryDate & "_" & strDeliveryRef)
+        If ExtractTotals IsNot Nothing Then 'Which should now be 0 if this is the first row.
+            If AddNewRow Then
+                'TotalRows = lngFLMTotalRows + 1
+                TotalRows = OpTotalRows + 1
+            Else
+                TotalRows = OpTotalRows
+            End If
+            ExtractTotals.Total_Operatives = TotalRows
+            'TotalRows = ExtractTotals.Total_Operatives - 1
+            HighestOpTag = ExtractTotals.HighestOpTAGID
+            StartBtnTAG = ExtractTotals.HighestOpBtnTAGID
+        Else
+            'TotalRows = lngFLMTotalRows + 1 'SO if both variables start at 0 then TotalsRows should be = 1.
+            TotalRows = OpTotalRows + 1
+            HighestOpTag = LowerTag
+            StartBtnTAG = 10
+        End If
+        'Is this correct ????
+        NewFrameRowNumber = TotalRows
+
+        strControlKey = strDeliveryDate & "_" & strDeliveryRef & "_" & CStr(40)
+        tempControl = dic_Controls(strControlKey)
+        strUsername = ""
+        strNAME = ""
+        strEMPNO = ""
+        If tempControl IsNot Nothing Then
+            strUsername = tempControl.ControlUpdatedByUsername
+            strNAME = tempControl.ControlUpdatedByName
+            strEMPNO = tempControl.ControlUpdatedByEmpNo
+        End If
+
+        TotalControlsInFrame = Math.Abs((TotalRows * ControlsPerRow))
+        ControlTotalRows = TotalRows
+
+        If TotalRows = 0 Then
+            UpperTAG = ((1 * ControlsPerRow) - 1) + LowerTag
+        Else
+            UpperTAG = ((TotalRows * ControlsPerRow) - 1) + LowerTag
+        End If
+        'First Parameter = Total Operatives value
+        'Second Parameter = NEW ROW NUMBER
+        'so in theory Total Operatives will be 0 for the first INSERT but the second paramter will be 1 for the FIRST ROW:
+        ' - NOW FrameRowNumber is the value passed into this function.
+        ' - if called from PopulateControls it will be a LOOP counter variable for EACH row that exists in tblOperatives matching the chosen reference.
+        ' - if called from ADD Operative or from SearchAndInsertName() this will be the NEXT / NEW ROW to be added.
+        localOPID = FrameRowNumber
+        AddNewOperatives(localOPID, localOPID, OpFrameControl, HighestOpTag, StartBtnTAG, ControlTABIndex,
+                         strDeliveryDate, strDeliveryRef, strASNNo, LowerTag, UpperTAG, TimeStartTAG, OpFieldnames, TotalRows,
+                         FieldIndex, False, ErrMessage, 0, OpName, OpActivity, dtStartTime, dtFinishTime, OpComment, 6,
+                         DisableStartButton, DisableFinishButton, DisableStartTimeEntry, DisableFinishTimeEntry)
+        'ExtractTotals.Total_Operatives = localOPID
+        ExtractTotals.HighestOpTAGID = HighestOpTag
+        ExtractTotals.HighestOpBtnTAGID = StartBtnTAG
+        ExtractTotals.OpStartTAG = LowerTag
+        ExtractTotals.OpFinishTAG = HighestOpTag
+        ExtractTotals.HighestOpTabIndex = ControlTABIndex
+        'TotalRows = localOPID - 1
+        dic_Totals(strDeliveryDate & "_" & strDeliveryRef) = ExtractTotals
+
+        frmMainGIForm.InsertValueIntoForm(FormName & FormID, "txtTotalOps", CStr(TotalRows))
+        ControlTotalRows = TotalRows
+
+        'INSERT NEW RECORD if not exists:
+        'NEED TO LOCATE THE FLM RECORD THAT ALREADY EXISTS:
+
+        If Len(strDeliveryDate) > 0 Then
+            'SearchText = CDate(strDeliveryDate).ToString("yyyy-MM-dd HH:mm:ss")
+            strSavedDeliveryDate = CDate(strDeliveryDate).ToString("yyyy-MM-dd HH:mm:ss")
+            SearchText = strDeliveryRef
+            SearchField = "DeliveryReference"
+            FieldType = "STRING"
+            ReturnField = "ID"
+            ReturnValue = ""
+            SearchCriteria = ""
+            SortFields = "DeliveryDate"
+            Reversed = True
+        Else
+            strSavedDeliveryDate = CDate("1970-01-01 00:00:00")
+        End If
+
+        SortFields = ""
+        Reversed = False
+        ExcludeFields = ""
+
+        'LabourFieldsArr = strToStringArray(frmMainGIForm., ",", 0, False, False, False, "_", False, 34, 39)
+
+        LabLoadedOK = Find_myQuery(frmMainGIForm.myConnString, LabourDBTable, SearchField, SearchText, FieldType, ReturnField, LabourRecID, LabAllValues,
+                                   LabAllFields, SearchCriteria, SortFields, Reversed, ErrMessage)
+
+        If Len(strDeliveryDate) > 0 Then
+            'SearchText = CDate(strDeliveryDate).ToString("yyyy-MM-dd HH:mm:ss")
+            SearchText = strDeliveryRef
+            SearchField = "DeliveryReference"
+            FieldType = "STRING"
+            ReturnField = "ID"
+            ReturnValue = ""
+            SortFields = "DeliveryDate"
+            Reversed = True
+            SearchCriteria = "FrameRowNumber = " & NewFrameRowNumber
+        End If
+
+        'SortFields = ""
+        'Reversed = False
+        'ExcludeFields = ""
+
+
+        OpLoadedOK = Find_myQuery(frmMainGIForm.myConnString, OpDBTable, SearchField, SearchText, FieldType, ReturnField, OpRecID, OpAllValues,
+                                   OpAllFields, SearchCriteria, SortFields, Reversed, ErrMessage)
+        If OpLoadedOK Then
+            OpSaveCriteria = "ID = " & OpRecID
+            'Need TAG number or control name to insert primary key value into Dic_Controls():
+            '************** OK we have the NewFrameRowNumber - just need to pick a control name to alter: *****************
+            ControlName = "txtOpRow:" & CStr(FrameRowNumber)
+            OpControl = frmMainGIForm.FindFrameControls(FormName & FormID, ControlName)
+            If OpControl IsNot Nothing Then
+                ChangeProperty = "PRIMARYKEY"
+                testCollection = UpdateCollection(dic_Controls, Nothing, OpRecID, CDate(strDeliveryDate), "",
+                                                      strDeliveryRef, OpControl.Tag, ChangeProperty)
+
+                If testCollection IsNot Nothing Then
+                    dic_Controls = testCollection
+                End If
+            End If
+        Else
+            OpSaveCriteria = ""
+        End If
+        LabSaveCriteria = ""
+        'tblLabourHours: BLANK record setup:
+        If LabLoadedOK Then
+            'UPDATE LABOUR record:
+            strLastSaved = GetMYValuebyFieldname(OpAllValues, OpAllFields, "LastSaved")
+            If IsDate(strLastSaved) Then
+                dtLastSaved = CDate(strLastSaved)
+            Else
+                dtLastSaved = Now()
+            End If
+            'dtLastSaved = Now()
+            LabourFields = "Total_Rows,Start_TAGID,END_TAGID,LastSaved"
+            'LabourFields = "Total_Rows,Start_TAGID,END_TAGID,UpdatedByUsername,UpdatedByEmpNo,UpdatedByName,LastSaved"
+            'LabourFieldValues = Chr(34) & ControlTotalRows & Chr(34)
+            LabourFieldValues = ControlTotalRows & "," & LowerTag & "," & UpperTAG
+            'LabourFieldValues = LabourFieldValues & "," & Chr(34) & strUsername & Chr(34) & "," & Chr(34) & strEMPNO & Chr(34) & "," & Chr(34) & strNAME & Chr(34)
+            'LabourFieldValues = LabourFieldValues & "," & Chr(39) & dtLastSaved.ToString("yyyy-MM-dd HH:mm:ss") & Chr(39)
+            LabourFieldValues = LabourFieldValues & "," & dtLastSaved
+            If Len(LabourRecID) > 0 Then
+                LabSaveCriteria = "ID = " & LabourRecID
+            End If
+            'ARE WE LOADING IN EXISTING OPERATIVES HERE ALSO ?????
+            ' - IF THIS PROCEDURE IS CALLED DURING POPULATECONTROLS - MAY HAVE VALUES ALREADY FOR THE ROW NUMBER,comNAME,comACTIVITY,txtSTARTTIME,txtENDTIME,txtCOMMENT
+            OpFields = "LinkID,DeliveryDate,DeliveryReference,FrameRowNumber,OpComments,UpdatedByUsername,UpdatedByEmpNo,UpdatedByName,LastSaved"
+
+            OpFieldValues = CLng(LabourRecID) & "," & CDate(strSavedDeliveryDate) & "," & strDeliveryRef
+            OpFieldValues = OpFieldValues & "," & NewFrameRowNumber & "," & OpComment
+            OpFieldValues = OpFieldValues & "," & strUsername & "," & strEMPNO & "," & strNAME
+            OpFieldValues = OpFieldValues & "," & dtLastSaved
+
+        Else 'NO FLM RECORD EXISTS FOR THIS REF:
+            dtDeliveryDate = CDate(strSavedDeliveryDate)
+            dtNow = Now()
+
+            LabourFields = "DeliveryDate,DeliveryReference,Total_Rows,Start_TAGID,END_TAGID,UpdatedByUsername,UpdatedByEmpNo,UpdatedByName,LastSaved"
+
+            LabourFieldValues = CDate(strSavedDeliveryDate) & "," & strDeliveryRef & "," & ControlTotalRows
+            LabourFieldValues = LabourFieldValues & "," & LowerTag & "," & UpperTAG
+            LabourFieldValues = LabourFieldValues & "," & strUsername & "," & strEMPNO & "," & strNAME
+            LabourFieldValues = LabourFieldValues & "," & dtNow
+
+            ExcludeFields = ""
+
+
+
+            If IsNumeric(LabourRecID) Then
+                OpFields = "DeliveryDate,DeliveryReference,FrameRowNumber,LinkID,OpComments,LastSaved"
+                OpFieldValues = CDate(strSavedDeliveryDate) & "," & strDeliveryRef
+                OpFieldValues = OpFieldValues & "," & NewFrameRowNumber & "," & CLng(LabourRecID) & "," & OpComment
+                OpFieldValues = OpFieldValues & "," & dtNow
+            Else
+                OpFields = "DeliveryDate,DeliveryReference,FrameRowNumber,OpComments,LastSaved"
+                OpFieldValues = CDate(strSavedDeliveryDate) & "," & strDeliveryRef
+                OpFieldValues = OpFieldValues & "," & NewFrameRowNumber & "," & OpComment
+                OpFieldValues = OpFieldValues & "," & dtNow
+            End If
+
+        End If
+        'SHOULD BE NEW FRAME ROW NUMBER = TOTAL RECORDS AS WE ARE INSERTING A NEW OP ROW - NOT UPDATING IT !
+
+        If Len(strDeliveryRef) > 0 And AddNewRow Then
+            'LabourSavedOK = InsertUpdateMyRecord(LabLoadedOK, frmMainGIForm.myConnString, LabourDBTable, LabourFields, LabourFieldValues, ErrMessage, LabSaveCriteria,
+            'ExcludeFields,)
+
+            LabourSavedOK = InsertUpdateRecords_Using_Parameters(frmMainGIForm.myConnString, LabLoadedOK, "", LabourDBTable, LabourFields, LabourFieldValues,
+                                                                    LabSaveCriteria, ExcludeFields, ErrMessage, False, ",")
+
+            If Not LabourSavedOK Then
+                'MsgBox("Labour Hours did NOT initialise/Update OK: " & ErrMessage)
+                frmMainGIForm.logger.LogError("GI_ERRORS_" & frmMainGIForm.myVersion & ".log", Application.StartupPath, ErrMessage,
+                                              "LabourSavedOK: InsertOperatives()",
+                                              frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR LOGGED OUT:" & frmMainGIForm.myUsername,
+                                              frmMainGIForm.myUsernameSuffix)
+                Exit Function
+            End If
+            'OpSavedOK = InsertUpdateMyRecord(OpLoadedOK, frmMainGIForm.myConnString, OpDBTable, OpFields, OpFieldValues, ErrMessage, OpSaveCriteria,
+            'ExcludeFields,)
+
+            OpSavedOK = InsertUpdateRecords_Using_Parameters(frmMainGIForm.myConnString, OpLoadedOK, "", OpDBTable, OpFields, OpFieldValues,
+                                                                    OpSaveCriteria, ExcludeFields, ErrMessage, False, ",")
+
+            If Not OpSavedOK Then
+                'ERROR - MsgBox("Operatives did NOT initialise OK: " & ErrMessage)
+                frmMainGIForm.logger.LogError("GI_ERRORS_" & frmMainGIForm.myVersion & ".log", Application.StartupPath,
+                                              ErrMessage, "not OpSAVEDOK: InsertOperatives()",
+                                              frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR LOGGED OUT:" & frmMainGIForm.myUsername,
+                                              frmMainGIForm.myUsernameSuffix)
+                Exit Function
+            Else
+                SearchCriteria = "FrameRowNumber = " & NewFrameRowNumber
+                OpLoadedOK = Find_myQuery(frmMainGIForm.myConnString, OpDBTable, SearchField, SearchText, FieldType, ReturnField, OpRecID, OpAllValues,
+                                   OpAllFields, SearchCriteria, SortFields, Reversed, ErrMessage)
+                If OpLoadedOK Then
+                    'OpSaveCriteria = "ID = " & OpRecID
+                    'Need TAG number or control name to insert primary key value into Dic_Controls():
+                    '************** OK we have the NewFrameRowNumber - just need to pick a control name to alter: *****************
+                    ControlName = "txtOpRow:" & CStr(NewFrameRowNumber)
+                    OpControl = frmMainGIForm.FindFrameControls(FormName & FormID, ControlName)
+                    If OpControl IsNot Nothing Then
+                        ChangeProperty = "PRIMARYKEY"
+                        testCollection = UpdateCollection(dic_Controls, Nothing, OpRecID, CDate(strDeliveryDate), "",
+                                                              strDeliveryRef, OpControl.Tag, ChangeProperty)
+
+                        If testCollection IsNot Nothing Then
+                            dic_Controls = testCollection
+                        End If
+                    End If
+                End If
+            End If
+        End If
+        'tblOperataves blank record setup:
+
+        InsertOperatives = TotalRows
+
+    End Function
+	

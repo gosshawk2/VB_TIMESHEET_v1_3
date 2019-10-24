@@ -1,0 +1,318 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{5BEF872B-C62D-4616-912C-F13A23D548BD}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <StartupObject>VB_TIMESHEET_v1_3.My.MyApplication</StartupObject>
+    <RootNamespace>VB_TIMESHEET_v1_3</RootNamespace>
+    <AssemblyName>VB_TIMESHEET_v1_3</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <MyType>WindowsForms</MyType>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DocumentationFile>VB_TIMESHEET_v1_3.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DocumentationFile>VB_TIMESHEET_v1_3.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionExplicit>On</OptionExplicit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionCompare>Binary</OptionCompare>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionStrict>Off</OptionStrict>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionInfer>On</OptionInfer>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>GI Userform Layout RP1_3.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="MySql.Data">
+      <HintPath>.\MySql.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="MySql.Data.Entity">
+      <HintPath>.\MySql.Data.Entity.dll</HintPath>
+    </Reference>
+    <Reference Include="MySql.Data.Entity.EF6">
+      <HintPath>.\MySql.Data.Entity.EF6.dll</HintPath>
+    </Reference>
+    <Reference Include="MySql.Fabric.Plugin">
+      <HintPath>.\MySql.Fabric.Plugin.dll</HintPath>
+    </Reference>
+    <Reference Include="MySql.Web">
+      <HintPath>.\MySql.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Data" />
+    <Import Include="System.Drawing" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Windows.Forms" />
+    <Import Include="System.Linq" />
+    <Import Include="System.Xml.Linq" />
+    <Import Include="System.Threading.Tasks" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ApplicationEvents.vb" />
+    <Compile Include="clsControls.vb" />
+    <Compile Include="clsErrorLog.vb" />
+    <Compile Include="clsTotals.vb" />
+    <Compile Include="ControlsManager.vb" />
+    <Compile Include="DanG_DB_Tools.vb" />
+    <Compile Include="DanG_EXCEL_Module.vb" />
+    <Compile Include="DanG_MySQL_Tools.vb" />
+    <Compile Include="DanG_TimeSheet_Module.vb" />
+    <Compile Include="Form1.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form1.Designer.vb">
+      <DependentUpon>Form1.vb</DependentUpon>
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_CreateUsers.Designer.vb">
+      <DependentUpon>Form_CreateUsers.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_CreateUsers.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_GI_Control_Panel_Using_Grid.Designer.vb">
+      <DependentUpon>Form_GI_Control_Panel_Using_Grid.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_GI_Control_Panel_Using_Grid.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_GI_GRID_Userform.Designer.vb">
+      <DependentUpon>Form_GI_GRID_Userform.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_GI_GRID_Userform.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_GI_RP_Userform.Designer.vb">
+      <DependentUpon>Form_GI_RP_Userform.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_GI_RP_Userform.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_GI_Userform.Designer.vb">
+      <DependentUpon>Form_GI_Userform.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_GI_Userform.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_MainGIControlForm.Designer.vb">
+      <DependentUpon>Form_MainGIControlForm.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_MainGIControlForm.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_Mysql_Login.Designer.vb">
+      <DependentUpon>Form_Mysql_Login.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_Mysql_Login.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FORM_OnlineUsers.Designer.vb">
+      <DependentUpon>FORM_OnlineUsers.vb</DependentUpon>
+    </Compile>
+    <Compile Include="FORM_OnlineUsers.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_ReferenceProgress.Designer.vb">
+      <DependentUpon>Form_ReferenceProgress.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_ReferenceProgress.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_SelectSheet.Designer.vb">
+      <DependentUpon>Form_SelectSheet.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_SelectSheet.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_TEST.Designer.vb">
+      <DependentUpon>Form_TEST.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_TEST.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_View_EXCEL_Sheet.Designer.vb">
+      <DependentUpon>Form_View_EXCEL_Sheet.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form_View_EXCEL_Sheet.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="My Project\Application.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Application.myapp</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Settings.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="ViewDataInGrid.Designer.vb">
+      <DependentUpon>ViewDataInGrid.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ViewDataInGrid.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ViewMonthlyCalendar.Designer.vb">
+      <DependentUpon>ViewMonthlyCalendar.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ViewMonthlyCalendar.vb">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Form_CreateUsers.resx">
+      <DependentUpon>Form_CreateUsers.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form_GI_Control_Panel_Using_Grid.resx">
+      <DependentUpon>Form_GI_Control_Panel_Using_Grid.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form_GI_GRID_Userform.resx">
+      <DependentUpon>Form_GI_GRID_Userform.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form_GI_RP_Userform.resx">
+      <DependentUpon>Form_GI_RP_Userform.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form_GI_Userform.resx">
+      <DependentUpon>Form_GI_Userform.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form_MainGIControlForm.resx">
+      <DependentUpon>Form_MainGIControlForm.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form_Mysql_Login.resx">
+      <DependentUpon>Form_Mysql_Login.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FORM_OnlineUsers.resx">
+      <DependentUpon>FORM_OnlineUsers.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form_ReferenceProgress.resx">
+      <DependentUpon>Form_ReferenceProgress.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form_SelectSheet.resx">
+      <DependentUpon>Form_SelectSheet.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form_View_EXCEL_Sheet.resx">
+      <DependentUpon>Form_View_EXCEL_Sheet.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="My Project\Resources.resx">
+      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ViewDataInGrid.resx">
+      <DependentUpon>ViewDataInGrid.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ViewMonthlyCalendar.resx">
+      <DependentUpon>ViewMonthlyCalendar.vb</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="My Project\Application.myapp">
+      <Generator>MyApplicationCodeGenerator</Generator>
+      <LastGenOutput>Application.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="My Project\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <CustomToolNamespace>My</CustomToolNamespace>
+      <LastGenOutput>Settings.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="Microsoft.Office.Core">
+      <Guid>{2DF8D04C-5BFA-101B-BDE5-00AA0044DE52}</Guid>
+      <VersionMajor>2</VersionMajor>
+      <VersionMinor>8</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+    <COMReference Include="Microsoft.Office.Interop.Excel">
+      <Guid>{00020813-0000-0000-C000-000000000046}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>9</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+    <COMReference Include="Scripting">
+      <Guid>{420B2830-E718-11CF-893D-00A0C9054228}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+    <COMReference Include="VBIDE">
+      <Guid>{0002E157-0000-0000-C000-000000000046}</Guid>
+      <VersionMajor>5</VersionMajor>
+      <VersionMinor>3</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="GI Userform Layout RP1_3.ico" />
+    <Content Include="GI Userform Layout RP7_2.ico" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

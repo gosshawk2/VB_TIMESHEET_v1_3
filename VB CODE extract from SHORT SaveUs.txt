@@ -1,0 +1,129 @@
+If UCase(ControlDBTable) = UCase(DBTAbles(5)) Then
+                        'AGAIN NEED TO LOOP THROUGH EACH ROW OF CONTROLS IN FRAME_SHORTSANDEXTRAS AND SAVE EACH ROW:
+                        'THIS WILL MOST LIKELY BE AN INSERT - BUT COULD ALSO BE AN UPDATE IF ANY PART NUMBER OR QUANTITY NEEDS CHANGING.
+                        ' -  HEY WE ALL MAKE MISTAKES !
+                        TAbleIDX = 5
+                        TotalControlsPerRow = 3
+                        '*** tblShortAndExtraParts ***
+                        RowNumber = Get_NumericPartOfString(ControlName)
+                        ShortsFrame = GetFrameControl("GI_TIMESHEET", "Frame_Short_Parts")
+                        ExtraFrame = GetFrameControl("GI_TIMESHEET", "Frame_Extra_Parts")
+                        'ValueProperty.ControlRowNumber = RowNumber
+
+                        If IsNumeric(TagName) Then
+                            If CLng(TagName) > 1000 And CLng(TagName) < 2000 Then
+                                ShortOrExtra = "SHORT"
+                                VTTAG = 1000
+                                TAbleIDX = 5
+                                'TotalShortFrameRows = GetTotalFrameRows(ShortsFrame, ControlLowerTag, ControlUpperTag, ControlsPerRow(5), VTTAG, True)
+                                'INSERT THE DELIVERY REFERENCE INTO THE KEY ALSO:
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "LINKID|" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "LINKID|" & CStr(RowNumber)) = CStr(RecID(1)) 'LINK BACK to tblDeliveryInfo record.
+                                    Fieldnames2(TAbleIDX, 1) = "LINKID"
+                                    FieldValues2(TAbleIDX, 1) = CStr(RecID(1))
+                                Else
+                                    'ControlValue = DeliveryRef
+                                End If
+
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "DELIVERYDATE|" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "DELIVERYDATE|" & CStr(RowNumber)) = DeliveryDAte
+                                    Fieldnames2(TAbleIDX, 2) = "DELIVERYDATE"
+                                    FieldValues2(TAbleIDX, 2) = DeliveryDAte
+                                Else
+                                    'ControlValue = DeliveryDate
+                                End If
+
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "DELIVERYREFERENCE|" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "DELIVERYREFERENCE|" & CStr(RowNumber)) = DeliveryRef
+                                    Fieldnames2(TAbleIDX, 3) = "DELIVERYREFERENCE"
+                                    FieldValues2(TAbleIDX, 3) = DeliveryRef
+                                Else
+                                    'ControlValue = DeliveryRef
+                                End If
+
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "FRAMEROWNUMBER|" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "FRAMEROWNUMBER|" & CStr(RowNumber)) = CStr(RowNumber)
+                                    Fieldnames2(TAbleIDX, 4) = "FRAMEROWNUMBER"
+                                    FieldValues2(TAbleIDX, 4) = CStr(RowNumber)
+                                Else
+                                    'ControlValue = DeliveryDate
+                                End If
+
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "TOTAL_ROWS|" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "TOTAL_ROWS|" & CStr(RowNumber)) = CStr(TotalShortFrameRows)
+
+                                Else
+                                    'ControlValue = DeliveryDate
+                                End If
+
+                                If UCase(ControlFieldname) = "PARTNO" Then
+                                    If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "PARTNO|" & CStr(RowNumber)) Then
+                                        Dic_SaveUs(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "PARTNO|" & CStr(RowNumber)) = ControlValue
+                                        Fieldnames2(TAbleIDX, 5) = ControlFieldname
+                                        FieldValues2(TAbleIDX, 5) = ControlValue
+                                    Else
+                                        'Repeated
+                                    End If
+                                    'FieldOpControls(5, RowIDX) = UCase(ControlFieldname)
+                                    'ValueOpControls(5, RowIDX) = UCase(ControlValue)
+                                End If
+
+                                If UCase(ControlFieldname) = "QTY" Then
+                                    If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "QTY|" & CStr(RowNumber)) Then
+                                        Dic_SaveUs(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "QTY|" & CStr(RowNumber)) = ControlValue
+                                        Fieldnames2(TAbleIDX, 6) = ControlFieldname
+                                        FieldValues2(TAbleIDX, 6) = ControlValue
+                                    Else
+                                        'Repeated
+                                    End If
+                                    'FieldOpControls(5, RowIDX) = UCase(ControlFieldname)
+                                    'ValueOpControls(5, RowIDX) = UCase(ControlValue)
+                                End If
+
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "SHORTOREXTRA|" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "SHORTOREXTRA|" & CStr(RowNumber)) = ShortOrExtra
+                                    Fieldnames2(TAbleIDX, 7) = ControlFieldname
+                                    FieldValues2(TAbleIDX, 7) = ControlValue
+                                Else
+                                    'repeated.
+                                End If
+
+                                'If UCase(ControlFieldname) = "UPDATEDBYUSERNAME" Then
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "UPDATEDBYUSERNAME|" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "UPDATEDBYUSERNAME|" & CStr(RowNumber)) = UpdatedByUsername
+                                    Fieldnames2(TAbleIDX, 9) = ControlFieldname
+                                    FieldValues2(TAbleIDX, 9) = ControlValue
+                                Else
+                                    'repeated:
+                                End If
+                                'End If
+                                'If UCase(ControlFieldname) = "UPDATEDBYEMPNO" Then
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "UPDATEDBYEMPNO|" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "UPDATEDBYEMPNO|" & CStr(RowNumber)) = UpdatedByEmpNo
+                                    Fieldnames2(TAbleIDX, 9) = ControlFieldname
+                                    FieldValues2(TAbleIDX, 9) = ControlValue
+                                Else
+                                    'repeated:
+                                End If
+                                'End If
+                                'If UCase(ControlFieldname) = "UPDATEDBYNAME" Then
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "UPDATEDBYNAME|" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "UPDATEDBYNAME|" & CStr(RowNumber)) = UpdatedByName
+                                    Fieldnames2(TAbleIDX, 9) = ControlFieldname
+                                    FieldValues2(TAbleIDX, 9) = ControlValue
+                                Else
+                                    'repeated:
+                                End If
+                                'End If
+                                'If UCase(ControlFieldname) = "LASTSAVED" Then
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "LASTSAVED|" & CStr(RowNumber)) Then
+                                    dtLastSaved = Now()
+                                    Dic_SaveUs(CStr(TAbleIDX) & "|" & DeliveryRef & "|" & "LASTSAVED|" & CStr(RowNumber)) = dtLastSaved
+                                    Fieldnames2(TAbleIDX, 9) = ControlFieldname
+                                    FieldValues2(TAbleIDX, 9) = ControlValue
+                                Else
+                                    'repeated:
+                                End If
+
+                            End If
+							

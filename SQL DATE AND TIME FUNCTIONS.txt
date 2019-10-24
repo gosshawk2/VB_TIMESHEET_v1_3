@@ -1,0 +1,56 @@
+Date and Time Functions
+In addition to providing mechanisms for storing dates and times, MySQL also provides a wide range of functions that can be used to manipulate dates and times. The following table provides a list of the more common functions available for working with times and dates in MySQL:
+
+Function	Description
+ADDDATE()	Add dates
+ADDTIME()	Add time
+CONVERT_TZ()	Convert from one timezone to another
+CURDATE()	Returns the current date
+CURTIME()	Returns the current system time
+DATE_ADD()	Add two dates
+DATE_FORMAT()	Format date as specified
+DATE_SUB()	Subtract two dates
+DATE()	Extract the date part of a date or datetime expression
+DATEDIFF()	Subtract two dates
+DAYNAME()	Returns the name of the weekday
+DAYOFMONTH()	Returns the day of the month (1-31)
+DAYOFWEEK()	Returns the weekday index of the argument
+DAYOFYEAR()	Returns the day of the year (1-366)
+EXTRACT	Extract part of a date
+FROM_DAYS()	Convert a day number to a date
+FROM_UNIXTIME()	Format date as a UNIX timestamp
+GET_FORMAT()	Returns a date format string
+HOUR()	Extract the hour
+LAST_DAY	Returns the last day of the month for the argument
+MAKEDATE()	Create a date from the year and day of year
+MAKETIME	MAKETIME()
+MICROSECOND()	Returns the microseconds from argument
+MINUTE()	Returns the minute from the argument
+MONTH()	Returns the month from the date passed
+MONTHNAME()	Returns the name of the month
+NOW()	Returns the current date and time
+PERIOD_ADD()	Add a period to a year-month
+PERIOD_DIFF()	Returns the number of months between two periods
+QUARTER()	Returns the quarter from a date passed as an argument
+SEC_TO_TIME()	Converts seconds to 'HH:MM:SS' format
+SECOND()	Returns the second (0-59)
+STR_TO_DATE()	Convert a string to a date
+SUBTIME()	Subtract times
+SYSDATE()	Returns the time at which the function executes
+TIME_FORMAT()	Format as time
+TIME_TO_SEC()	Returns the argument converted to seconds
+TIME()	Extract the time portion of the expression passed as an argument
+TIMEDIFF()	Subtract time
+TIMESTAMP()	With a single argument, this function returns the Date or the Datetime expression. With two arguments, the sum of the arguments is returned
+TIMESTAMPADD()	Add an interval to a datetime expression
+TIMESTAMPDIFF()	Subtract an interval from a datetime expression
+TO_DAYS()	Returns the date argument converted to days
+UNIX_TIMESTAMP()	Returns a UNIX timestamp to a format acceptable to MySQL
+UTC_DATE()	Returns the current Universal Time (UTC) date
+UTC_TIME()	Returns the current Universal Time (UTC time
+UTC_TIMESTAMP()	Returns the current Universal Time (UTC) date and time
+WEEK()	Returns the week number
+WEEKDAY()	Returns the weekday index
+WEEKOFYEAR()	Returns the calendar week of the date (1-53)
+YEAR()	Returns the year
+YEARWEEK()	Returns the year and week

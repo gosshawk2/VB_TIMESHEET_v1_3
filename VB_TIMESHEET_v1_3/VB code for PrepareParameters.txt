@@ -1,0 +1,239 @@
+Function PrepareParameters(ByVal REcordID As String, ByRef InsertSQL As String, ByRef UpdateSQL As String, ByRef Dic_ParameterInfo As Object,
+    ByVal DBTable As String, ByRef ParamFieldnames As String, ByRef ParamValues As Object, FieldTypes() As String,
+    ByVal Dic_FieldsAndValues As Object, Optional Encase_Fields As Boolean = False, Optional UpdateCriteria As String = "") As Long
+        'Dim FieldArr() As String
+        Dim ValueArr As Object
+        Dim Fieldname As String
+        Dim fldValue As Object
+        Dim ParamKey As String
+        Dim ParamItem As String
+        Dim Dic_FieldTypes As Object
+        Dim FieldType As Integer
+        Dim FieldTypesArr() As String
+        Dim varKey As String
+        Dim fldLength As Long
+        Dim ParamFldLength As Long
+        Dim DontSave As Boolean
+        Dim IncludeComma As Boolean
+        Dim IncludeQuotes As Boolean
+        Dim IncludeSpaces As Boolean
+        Dim DeliveryComments As String
+        Dim FieldCount As Long
+        Dim AllFieldnames As String
+        Dim AllFieldTypes As String
+
+        'THIS FUNCTION ONLY SAVES 1 RECORD.
+
+        PrepareParameters = 0
+        If Dic_FieldsAndValues.Count = 0 Then
+            Exit Function
+        End If
+        DontSave = False
+        'ReDim FieldArr(1)
+        ReDim FieldTypesArr(1)
+
+        fldLength = 0
+        FieldType = 0
+        FieldCount = 0
+        InsertSQL = ""
+        UpdateSQL = "UPDATE " & DBTable & " SET "
+        DeliveryComments = "ISSUES: "
+        ParamFldLength = 0
+        ParamFieldnames = ""
+        ParamValues = ""
+
+        Dic_FieldTypes = New Scripting.Dictionary
+        Dic_ParameterInfo = New Scripting.Dictionary
+        'Dic_FieldTypes(fieldname) = FieldType()
+
+        For Each varKey In Dic_FieldsAndValues
+            FieldCount = FieldCount + 1
+            If varKey Is Nothing Or Len(varKey) = 0 Then
+                Continue For
+            End If
+            'VarKey = UCase(VarKey)
+
+            Fieldname = UCase(varKey)
+            fldValue = UCase(Dic_FieldsAndValues(varKey))
+            FieldType = UCase(Dic_FieldTypes(Fieldname))
+            DontSave = False 'for EACH field.
+            fldLength = Len(fldValue)
+            ParamFldLength = 0
+            If FieldType = 202 Then
+                'SHORT TEXT
+                ParamFldLength = Len(fldValue)
+                If fldLength > 0 Then
+                    If Encase_Fields Then
+                        fldValue = Chr(34) & fldValue & Chr(34)
+                    End If
+                    IncludeComma = True
+                    IncludeQuotes = True
+                    IncludeSpaces = False
+                    fldValue = ConvertBadChars(CStr(fldValue), "", IncludeComma, IncludeQuotes, IncludeSpaces)
+                Else
+                    'BLANK / EMPTY field value:
+                    'dontsave = True ??????????????????????????????? what if user wants to blank out a field ??
+                    fldValue = " "
+                    ParamFldLength = 1
+                    DeliveryComments = DeliveryComments & " Field: " & Fieldname & " =EMPTY,"
+                End If
+            ElseIf FieldType = 203 Then
+                'LONG TEXT
+                ParamFldLength = Len(fldValue)
+                If fldLength > 0 Then
+                    ParamFldLength = Len(fldValue)
+                    If Encase_Fields Then
+                        fldValue = Chr(34) & fldValue & Chr(34)
+                    End If
+                    IncludeComma = True
+                    IncludeQuotes = True
+                    IncludeSpaces = False
+                    fldValue = ConvertBadChars(CStr(fldValue), "", IncludeComma, IncludeQuotes, IncludeSpaces)
+                Else
+                    'BLANK / EMPTY field value:
+                    'dontsave = True ??????????????????????????????? what if user wants to blank out a field ??
+                    fldValue = " "
+                    ParamFldLength = 1
+                    DeliveryComments = DeliveryComments & " Field: " & Fieldname & " =EMPTY,"
+                End If
+            ElseIf FieldType = 3 Then
+                'INTEGER or LONG - NUMERIC.
+                ParamFldLength = 0
+                IncludeComma = True
+                IncludeQuotes = True
+                IncludeSpaces = True
+                If fldLength > 0 Then
+                    fldValue = ConvertBadChars(CStr(fldValue), "", IncludeComma, IncludeQuotes, IncludeSpaces)
+                    If IsNumeric(fldValue) Then
+                        'OK SAVE PARAMETER
+                    Else
+                        'TEXT appears in this numeric field:
+                        DeliveryComments = DeliveryComments & " Field: " & Fieldname & ": " & CStr(fldValue) & ","
+                        fldValue = 0
+
+                    End If
+                Else
+                    DeliveryComments = DeliveryComments & " Field: " & Fieldname & ": EMPTY,"
+                    fldValue = 0
+                End If
+            ElseIf FieldType = 5 Then
+                'DOUBLE - will have PRECISION and NUMBER of DECIMAL PLACES
+                ParamFldLength = 0
+                IncludeComma = True
+                IncludeQuotes = True
+                IncludeSpaces = True
+                If fldLength > 0 Then
+                    fldValue = ConvertBadChars(CStr(fldValue), "", IncludeComma, IncludeQuotes, IncludeSpaces)
+                    If IsNumeric(fldValue) Then
+                        'OK SAVE PARAMETER
+                    Else
+                        'TEXT appears in this numeric field:
+                        DeliveryComments = DeliveryComments & " Field: " & Fieldname & ": " & CStr(fldValue) & ","
+                        fldValue = 0
+
+                    End If
+                Else
+                    DeliveryComments = DeliveryComments & " Field: " & Fieldname & ": EMPTY,"
+                    fldValue = 0 'Could put 0.00f instead ????
+                End If
+
+
+            ElseIf FieldType = 6 Then
+                'CURRENCY
+                ParamFldLength = 0
+                IncludeComma = True
+                IncludeQuotes = True
+                IncludeSpaces = True
+                If fldLength > 0 Then
+                    fldValue = ConvertBadChars(CStr(fldValue), "", IncludeComma, IncludeQuotes, IncludeSpaces)
+                    If IsNumeric(fldValue) Then
+                        'OK SAVE PARAMETER
+                    Else
+                        'TEXT appears in this numeric field:
+                        DeliveryComments = DeliveryComments & " Field: " & Fieldname & ": " & CStr(fldValue) & ","
+                        fldValue = 0
+
+                    End If
+                Else
+                    DeliveryComments = DeliveryComments & " Field: " & Fieldname & ": EMPTY,"
+                    fldValue = 0 'Could put 0.00f instead ????
+                End If
+
+            ElseIf FieldType = 7 Then
+                'DATEs
+                ParamFldLength = 0
+                IncludeComma = True
+                IncludeQuotes = True
+                IncludeSpaces = True
+                If fldLength < 6 Then
+                    fldValue = "1/1/1970"
+                    DeliveryComments = DeliveryComments & " Field:" & Fieldname & " Invalid Date,"
+                Else
+                    fldValue = ConvertBadChars(CStr(fldValue), "", IncludeComma, IncludeQuotes, IncludeSpaces)
+                    fldValue = CDate(CStr(fldValue))
+                End If
+            ElseIf FieldType = 0 Then
+                'Field Type is Unrecognised or some error here ? = 0
+                ParamFldLength = 0
+                IncludeComma = True
+                IncludeQuotes = True
+                IncludeSpaces = True
+                If fldLength < 2 Then
+                    DontSave = True
+                Else
+                    DontSave = True
+                End If
+                DeliveryComments = DeliveryComments & " Field:" & Fieldname & ": Type0= " & fldValue
+            Else
+                'UNKNOWN FIELD TYPE:
+                ParamFldLength = 0
+                IncludeComma = True
+                IncludeQuotes = True
+                IncludeSpaces = True
+                If fldLength < 2 Then
+                    DontSave = True
+                Else
+                    DontSave = True
+                End If
+                DeliveryComments = DeliveryComments & " Field:" & Fieldname & ": Unknown Type= " & fldValue
+
+            End If
+            If DontSave = False Then
+                'Create Parameter for this field:
+                ParamKey = "@" & Fieldname
+                If FieldCount < 2 Then
+                    ParamFieldnames = Fieldname
+                    ParamValues = ParamKey
+                    UpdateSQL = UpdateSQL & "[" & Fieldname & "]" & " = " & ParamKey
+                Else
+                    ParamFieldnames = ParamFieldnames & "," & Fieldname
+                    ParamValues = ParamValues & "," & ParamKey
+                    UpdateSQL = UpdateSQL & ",[" & Fieldname & "]" & " = " & ParamKey
+                End If
+                ParamItem = CStr(FieldType) & "_" & CStr(ParamFldLength) & "_" & fldValue & "_" & DeliveryComments
+                If Not Dic_ParameterInfo.Exists(ParamKey) Then
+                    Dic_ParameterInfo(ParamKey) = ParamItem
+                End If
+
+            Else
+                'DONT CREATE PARAMETER - INVALID value:
+                'BUT still save / update the DeliveryComments:
+                DeliveryComments = DeliveryComments & " Field:" & Fieldname & ": Not Saved= " & fldValue
+            End If
+        Next
+        If Len(REcordID) > 0 Then
+            If CLng(REcordID) > 0 Then
+                UpdateSQL = UpdateSQL & " WHERE ID = " & CLng(REcordID)
+            End If
+        Else
+            If Len(UpdateCriteria) > 0 Then
+                UpdateSQL = UpdateSQL & " WHERE " & UpdateCriteria
+            End If
+        End If
+        InsertSQL = "INSERT INTO " & DBTable & " (" & ParamFieldnames & ")" & " VALUES " & "(" & ParamValues & ")"
+        PrepareParameters = Dic_ParameterInfo.Count
+
+
+    End Function
+	
+	

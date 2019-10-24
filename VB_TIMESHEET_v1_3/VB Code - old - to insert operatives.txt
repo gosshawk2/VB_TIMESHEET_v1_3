@@ -1,0 +1,25 @@
+'For RowIDX = 1 to TotalFrameRows
+        '       FieldNames(1) = "DeliveryDate"
+        '       FieldValues(1) = cstr(DeliveryDate)
+        '       FieldNames(2) = "DeliveryReference"
+        '       FieldValues(2) = DeliveryRef
+        '       TAGNUMBER = CLNG(ControlLowerTag)
+        '       FieldIDX = StartFieldIDX
+        '       ctrlProperty = dic_Controls(DeliveryDAte & "_" & DeliveryRef & "_" & cstr(TAgNumber))
+        '       ControlFieldName  = ctrlProperty.ControlFieldname
+        '       if ucase(ControlFieldNAME) = ucase("OpFrameRow:" & cstr(RowIDX)) then
+        '           ControlValue = ctrlProperty.ControlValue
+        '           Fieldnames(FieldIDX) = ControlFieldname
+        '           FieldValues(FieldIDX) = ControlValue
+        '       endif
+        '       FieldIDX = FieldIDX+1
+        '       TagNUMBER = TagNUMBER+1
+        '       ctrlProperty = dic_Controls(DeliveryDAte & "_" & DeliveryRef & "_" & cstr(TAgNumber))
+        '       ControlFieldName  = ctrlProperty.ControlFieldname
+        '       if ucase(controlFieldName) = ucase("OpName:" & cstr(RowIDX)) then
+        '           ControlValue = ctrlProperty.ControlValue
+        '           Fieldnames(FieldIDX) = ControlFieldname
+        '           FieldValues(FieldIDX) = ControlValue
+        '       endif
+        '       FieldIDX = FieldIDX+1
+	

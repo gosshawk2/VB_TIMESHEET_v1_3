@@ -1,0 +1,33 @@
+Private Sub frmMainGIForm_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
+        Dim criteria As String
+        Dim MyMessage As String = ""
+        Dim AreYouSure As Integer
+        Dim OpsOnlineCriteria As String
+        Dim Messages As String = ""
+
+        'MsgBox("CLOSE MAIN FORM")
+        'Needs to check if any changes have been made since LAST SAVE ??? check AnyChanges(ControlPanelIDX) global flag.
+        'WELL - in this case will have to be a DICTIONARY variable where the key will be ControlPanelIDX and value is YES/NO
+        'So set to TRUE if ANY character typed into either TEXT BOX or COMBO BOX (or start or end button clicked) - see clsControls.
+        'set to FALSE after a SUCCESSFULL save.
+        criteria = "SessionID = " & Chr(39) & mySessionID & Chr(39)
+
+        If Check_myLoggedIN() Then
+            AreYouSure = MsgBox("Are You Sure ?", vbYesNo, "QUIT APPLICATION")
+            If AreYouSure = vbYes Then
+                If UCase(DatabaseType) = "MYSQL" Then
+                    UpdateMySession(myConnString, "", "", "", "", "", mySessionID, "", CStr(Now()), "NO", "", criteria, MyMessage)
+                    OpsOnlineCriteria = "ComputerName = " & Chr(39) & GetComputerName() & Chr(39)
+                    DeleteMyRecord("tblOperatorsOnline", myConnString, OpsOnlineCriteria, Messages)
+                    If Len(Messages) > 0 Then
+                        MsgBox("Error during removal of online username: " & Messages)
+                    End If
+                End If
+            Else
+                'NO - but user has now closed the main window !
+                e.Cancel = True
+            End If
+        End If
+    End Sub
+	
+	

@@ -1,0 +1,59 @@
+                FoundCtrl = frmMainGIForm.FindControls("GI_TIMESHEET", CStr(TagNumber), ChildCtrl)
+                If FoundCtrl IsNot Nothing Then
+                    'put value into control:
+                    frmMainGIForm.InsertValueIntoForm("GI_TIMESHEET", FoundCtrl.Name, strResult)
+                    'Insert into Dic_Controls:
+                    varKeyRef = strDeliveryDate & "_" & strDeliveryRef & "_" & TagNumber
+                    ControlName = FoundCtrl.Name
+                    ControlTAG = CStr(TagNumber)
+                    ControlText = strResult
+
+                    ControlLeft = FoundCtrl.Left
+                    ControlTop = FoundCtrl.Top
+                    ControlWidth = FoundCtrl.Width
+                    ControlHeight = FoundCtrl.Height
+                    ControlOBJCount = TagNumber
+                    ControlStartTAG = "40"
+                    ControlEndTAG = "42"
+                    ControlRowNumber = 1
+                    ControlTotalRows = 1
+                    ListArray = Nothing
+                    ControlBACKCOLOUR = System.Drawing.ColorTranslator.ToWin32(FoundCtrl.BackColor)
+                    ControlForeColor = System.Drawing.ColorTranslator.ToWin32(FoundCtrl.ForeColor)
+                    ControlFontName = FoundCtrl.Font.Name
+                    ControlFontSize = FoundCtrl.Font.Size
+                    If FoundCtrl.Font.Bold Then
+                        ControlFontStyle = "BOLD"
+                    Else
+                        ControlFontStyle = "NORMAL"
+                    End If
+                    If FoundCtrl.Font.Italic Then
+                        ControlFontStyle = ControlFontStyle & "," & "ITALIC"
+                    End If
+                    If FoundCtrl.Font.Underline Then
+                        ControlFontStyle = ControlFontStyle & "," & "UNDERLINE"
+                    End If
+                    If FoundCtrl.Font.Strikeout Then
+                        ControlFontStyle = ControlFontStyle & "," & "STRIKEOUT"
+                    End If
+                    If TypeOf (FoundCtrl) Is TextBox Then
+                        NewTextBox = DirectCast(FoundCtrl, System.Windows.Forms.TextBox)
+                        If NewTextBox.TextAlign = HorizontalAlignment.Left Then
+                            ControlTextAlign = "LEFT"
+                        ElseIf NewTextBox.TextAlign = HorizontalAlignment.Center Then
+                            ControlTextAlign = "CENTER"
+                        ElseIf NewTextBox.TextAlign = HorizontalAlignment.Right Then
+                            ControlTextAlign = "RIGHT"
+                        Else
+                            ControlTextAlign = ""
+                        End If
+                    End If
+                    NewIndex = AddNewControl(False, Frame_InboundSchedule, DBTables(1), ControlFieldname, "ID", FoundCtrl, ControlName,
+                                             ControlText, ControlType, ControlTAG, ControlDate, ControlLeft, ControlTop,
+                                             ControlWidth, ControlHeight, ControlDeliveryDate, ControlDeliveryRef, ControlASN,
+                                             ControlOBJCount, ControlStartTAG, ControlEndTAG, ControlRowNumber, ControlTotalRows,
+                                             True, ListArray, ControlBACKCOLOUR, False, ControlFontName, ControlFontSize,
+                                             ControlFontStyle, ControlForeColor, ControlTextAlign, "MIDDLE CENTER", False, False)
+                End If
+				
+				

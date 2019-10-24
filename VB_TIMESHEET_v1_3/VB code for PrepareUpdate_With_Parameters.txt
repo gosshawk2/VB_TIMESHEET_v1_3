@@ -1,0 +1,242 @@
+Function PrepareUpdate_With_Parameters(ByRef REcordID As String, ByVal ConnString As String, ByVal DBTable As String, ByRef Fieldnames As String,
+                                           ByVal FieldValues As String, ByRef FieldTypes As String, ByRef Dic_ParameterInfo As Object, ByVal UpdateCriteria As String,
+                                           Optional ErrMessage As String = "",
+                                           Optional ByRef ExcludeFields As String = "", Optional Encase_Fields As Boolean = False,
+                                           Optional FieldDelim As String = ",", Optional ValueDelim As String = ";",
+                                           Optional TypeStartIDX As Long = 0,
+                                           Optional RemoveBadChars As Boolean = False,
+                                           Optional IncludeCommaInBadChars As Boolean = False,
+                                           Optional IncludeSpeechMarksInBadChars As Boolean = False,
+                                           Optional REplaceWith As String = "_") As String
+        'PrepareUpdate_With_Parameters(DBPath, DBTable, Fieldnames, FieldValues, Dic_ParamInfo, UpdateCriteria, ExcludedFields, False, FieldValueDelim, FieldValueDelim)
+        Dim FieldNameArray() As String
+        Dim IgnoreFieldsArray() As String
+        Dim ValueArray() As String
+        Dim FinalCMD As String
+        Dim IDX As Integer
+        Dim fldName As String
+        Dim fldValue As String
+        Dim NumFields As Integer
+        Dim UpdateCmd As String
+        Dim IncludeComma As Boolean
+        Dim Operation As String
+        Dim ParamKey As String
+        Dim ParamItem As Object
+        Dim Dic_FieldTypes As Object
+        Dim FieldType As Integer
+        Dim FieldTypesArr() As String
+        Dim varKey As String
+        Dim Dic_FieldsAndValues As Object
+        Dim InsertSQL As String
+        Dim UpdateSQL As String
+        Dim ParamFieldnames As String
+        Dim ParamValues As String
+        Dim TotalParameters As Long
+        Dim AllFieldnames As String
+
+        FinalCMD = ""
+        ReDim FieldNameArray(1)
+        ReDim IgnoreFieldsArray(1)
+        ReDim ValueArray(1)
+
+        Dic_ParameterInfo = CreateObject("Scripting.Dictionary")
+        Dic_ParameterInfo.RemoveAll
+        Dic_ParameterInfo.CompareMode = vbTextCompare
+        Dic_FieldTypes = CreateObject("Scripting.Dictionary")
+        Dic_FieldTypes.RemoveAll
+        Dic_FieldTypes.CompareMode = vbTextCompare
+        Dic_FieldsAndValues = CreateObject("Scripting.Dictionary")
+        Dic_FieldsAndValues.RemoveAll
+        Dic_FieldsAndValues.CompareMode = vbTextCompare
+
+        AllFieldnames = GetMyFields(DBTable, ConnString, ErrMessage, ExcludeFields, FieldTypes, TypeStartIDX, Dic_FieldTypes)
+        FieldTypesArr = strToStringArray(FieldTypes, ",", TypeStartIDX, Encase_Fields, RemoveBadChars, IncludeCommaInBadChars, REplaceWith, IncludeSpeechMarksInBadChars)
+
+
+        PrepareUpdate_With_Parameters = ""
+        If Len(ExcludeFields) > 0 Then
+            IgnoreFieldsArray = strToStringArray(ExcludeFields, ",")
+        End If
+        If Len(DBTable) = 0 Then
+            MsgBox("Error in PrepareUpdate_With_Parameters: No Database Table specified")
+            PrepareUpdate_With_Parameters = ""
+            Exit Function
+        End If
+        If Len(Fieldnames) = 0 Then
+            'NumFields = GetNumFields(connString, "SELECT * FROM " & TableName, DBName, Fieldnames)
+            Fieldnames = AllFieldnames
+        End If
+
+        FieldNameArray = strToStringArray(Fieldnames, FieldDelim, 1, False, True, False, "_", False)
+        If Len(FieldValues) > 0 Then
+            ValueArray = strToStringArray(FieldValues, ValueDelim, 1, False, True, IncludeComma, "_", IncludeSpeechMarksInBadChars)
+        Else
+            MsgBox("Error in PrepareUpdate_With_Parameters: No values specified")
+            PrepareUpdate_With_Parameters = ""
+            Exit Function
+        End If
+        'BUT check that the values are removed too if they corresponded with those fields removed ????
+        Fieldnames = RemoveExtractedFields(FieldNameArray, IgnoreFieldsArray, ",", FieldNameArray, 1, 1) 'rebuilds whole list without the extracted fields
+
+        If UBound(FieldNameArray) > 0 And UBound(ValueArray) > 0 Then
+            If UBound(FieldNameArray) < UBound(ValueArray) Then
+                MsgBox("Error in PrepareUpdate_With_Parameters: Number of Fields Passed are LESS than Number of VALUES passed.")
+                PrepareUpdate_With_Parameters = ""
+                Exit Function
+            End If
+            If UBound(FieldNameArray) > UBound(ValueArray) Then
+                MsgBox("Error in PrepareUpdate_With_Parameters: Number of Fields Passed are GREATER than Number of VALUES passed.")
+                PrepareUpdate_With_Parameters = ""
+                Exit Function
+            End If
+        End If
+        'Prepare and insert parameter INFO for the script dictionary
+
+
+        'IDX = 1
+        'UpdateCmd = "UPDATE " & DBTable & " SET "
+
+        Dic_FieldsAndValues.RemoveAll
+        For IDX = 1 To UBound(FieldNameArray)
+            fldName = UCase(FieldNameArray(IDX))
+
+            If Not Dic_FieldsAndValues.Exists(fldName) Then
+                Dic_FieldsAndValues(fldName) = ValueArray(IDX)
+            End If
+        Next
+        'Prepare and insert parameter INFO for the script dictionary
+
+        TotalParameters = PrepareParameters(REcordID, InsertSQL, UpdateSQL, Dic_ParameterInfo, DBTable, ParamFieldnames, ParamValues, FieldTypesArr, Dic_FieldsAndValues, False)
+
+        FinalCMD = UpdateSQL
+
+        PrepareUpdate_With_Parameters = FinalCMD
+
+
+    End Function
+
+    Function PrepareInsert_With_Parameters(ByVal REcordID As String, ByVal connString As String, ByVal DBTable As String, ByRef Fieldnames As String,
+                                           ByVal FieldValues As String, FieldTypes As String, ByRef Dic_ParameterInfo As Object,
+                                           Optional ErrMessage As String = "",
+                                           Optional ByRef ExcludeFields As String = "",
+                                           Optional Encase_Fields As Boolean = False,
+                                           Optional FieldDelim As String = ",",
+                                           Optional ValueDelim As String = ";",
+                                           Optional TypeStartIDX As Long = 0,
+                                           Optional RemoveBadChars As Boolean = False,
+                                           Optional IncludeCommaInBadChars As Boolean = False,
+                                           Optional IncludeSpeechMarksInBadChars As Boolean = False,
+                                           Optional REplaceWith As String = "_") As String
+        'PrepareInsert_With_Parameters(DBPath, DBTable, Fieldnames, FieldValues, Dic_ParamInfo, ExcludedFields, False, FieldValueDelim, FieldValueDelim)
+        Dim FieldNameArray() As String
+        Dim IgnoreFieldsArray() As String
+        Dim ValueArray() As String
+        Dim FinalCMD As String
+        Dim IDX As Integer
+        Dim fldName As String
+        Dim fldValue As String
+        Dim fldValues As String
+        Dim NumFields As Integer
+        Dim UpdateCmd As String
+        Dim IncludeComma As Boolean
+        Dim Operation As String
+        Dim ParamKey As String
+        Dim ParamItem As String
+        Dim Dic_FieldTypes As Object
+        Dim FieldType As Integer
+        Dim FieldTypesArr() As String
+        Dim varKey As String
+        Dim fldLength As Long
+        Dim TotalParameters As Long
+        Dim InsertSQL As String
+        Dim UpdateSQL As String
+        Dim ParamFieldnames As String
+        Dim ParamValues As String
+        Dim Dic_FieldsAndValues As Object
+        Dim AllFieldnames As String
+
+        FinalCMD = ""
+        fldValues = ""
+        ReDim FieldNameArray(1)
+        ReDim IgnoreFieldsArray(1)
+        ReDim ValueArray(1)
+
+
+        Dic_ParameterInfo = CreateObject("Scripting.Dictionary")
+        Dic_ParameterInfo.CompareMode = vbTextCompare
+        Dic_FieldsAndValues = New Scripting.Dictionary
+        Dic_FieldsAndValues.RemoveAll
+        Dic_FieldsAndValues.CompareMode = vbTextCompare
+        'Dic_ParameterInfo.RemoveAll
+        Dic_FieldTypes = CreateObject("Scripting.Dictionary")
+        Dic_FieldTypes.RemoveAll
+        Dic_FieldTypes.CompareMode = vbTextCompare
+
+        AllFieldnames = GetMyFields(DBTable, connString, ErrMessage, ExcludeFields, FieldTypes, TypeStartIDX)
+        FieldTypesArr = strToStringArray(FieldTypes, ",", TypeStartIDX, Encase_Fields, RemoveBadChars, IncludeCommaInBadChars, REplaceWith, IncludeSpeechMarksInBadChars)
+
+        PrepareInsert_With_Parameters = ""
+
+        If Len(ExcludeFields) > 0 Then
+            IgnoreFieldsArray = strToStringArray(ExcludeFields, FieldDelim, 0, False, True, False, "_", False)
+        End If
+        If Len(DBTable) = 0 Then
+            MsgBox("Error in PrepareInsert_With_Parameters: No Database Table specified")
+            PrepareInsert_With_Parameters = ""
+            Exit Function
+        End If
+
+        If Len(Fieldnames) = 0 Then
+            Fieldnames = AllFieldnames
+        End If
+        'SO what if Dic_ParameterInfo.count > 0 then ????????????
+        'This means that its been passed back in - after evaluation from the parameters section - before the EXECUTE SQL.
+        ' - means that number of fields do not match number of parameter @ values passed.
+        ' so we need to resolve this. maybe instead of @P1 .... we need to use the actual fieldname - @DeliveryDate etc.
+        ' This way we can remove the @ symbol and know which fields have been passed and which ARE MISSING !
+        If Dic_ParameterInfo.Count > 0 Then
+            'OK so we can get all of the fields from the table to start with.
+            'Then we need to eliminate the fields that are NOT in the Dictionary:
+            ' - this will form the fields that are left to put into the final SQL query.
+
+        End If
+        '
+        'FieldNameArray = strToStringArray(Fieldnames, FieldDelim, 0, False, True) 'EACH fieldname passed must have square brackets around it.
+        FieldNameArray = strToStringArray(Fieldnames, FieldDelim, 1, False, True, False, "_", False)
+        If Len(FieldValues) > 0 Then
+            ValueArray = strToStringArray(FieldValues, ValueDelim, 1, False, True, IncludeComma, "", IncludeSpeechMarksInBadChars)
+        Else
+            MsgBox("Error in PrepareInsert_With_Parameters: No values specified")
+            PrepareInsert_With_Parameters = ""
+            Exit Function
+        End If
+        Fieldnames = RemoveExtractedFields(FieldNameArray, IgnoreFieldsArray, FieldDelim, FieldNameArray, 1, 1)
+        If UBound(FieldNameArray) > 0 And UBound(ValueArray) > 0 Then
+            If UBound(FieldNameArray) < UBound(ValueArray) Then
+                MsgBox("Error in PrepareInsert_With_Parameters: Number of Fields Passed are LESS than Number of VALUES passed.")
+                PrepareInsert_With_Parameters = ""
+                Exit Function
+            End If
+            If UBound(FieldNameArray) > UBound(ValueArray) Then
+                MsgBox("Error in PrepareInsert_With_Parameters: Number of Fields Passed are GREATER than Number of VALUES passed.")
+                PrepareInsert_With_Parameters = ""
+                Exit Function
+            End If
+        End If
+        Dic_FieldsAndValues.RemoveAll
+        For IDX = 1 To UBound(FieldNameArray)
+            fldName = UCase(FieldNameArray(IDX))
+            If Not Dic_FieldsAndValues.Exists(fldName) Then
+                Dic_FieldsAndValues(fldName) = ValueArray(IDX)
+            End If
+        Next
+        'Prepare and insert parameter INFO for the script dictionary
+
+        TotalParameters = PrepareParameters(REcordID, InsertSQL, UpdateSQL, Dic_ParameterInfo, DBTable, ParamFieldnames, ParamValues, Dic_FieldsAndValues, False)
+
+        FinalCMD = InsertSQL
+        PrepareInsert_With_Parameters = FinalCMD
+
+    End Function
+	
+	

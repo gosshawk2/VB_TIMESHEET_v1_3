@@ -1,0 +1,58 @@
+If ExcelArray IsNot Nothing Then
+                            Dim bounds As Integer = ExcelArray.GetUpperBound(0)
+                            'dtDeliveryDate = ExcelArray
+                            TotalFields = UBound(ExcelArray, 2)
+                            'Clear the grid:
+
+                            For ColIDX = 1 To TotalFields
+                                tempTable.Columns.Add("Column" & CStr(ColIDX))
+                                If InclTitlesForDataTable Then
+                                    'Titles(ColIDX) = ExcelArray(1, ColIDX)
+                                End If
+                            Next
+
+                            For RowIDX = 1 To bounds
+                                'dr = dt.NewRow
+                                'For ColIDX = 1 To 10
+                                'dt.Columns.Add(ExcelArray(RowIDX, ColIDX))
+                                If (ExcelArray(RowIDX, 1) IsNot Nothing) Then
+                                    dr = tempTable.NewRow
+                                    For ColIDX = 1 To TotalFields
+                                        'If InclTitlesForDataTable And RowIDX = 1 Then
+                                        'dr.Item("Column" & CStr(ColIDX)) = Titles(ColIDX)
+                                        'End If
+                                        dr.Item("Column" & CStr(ColIDX)) = ExcelArray(RowIDX, ColIDX)
+
+                                        ''Need to test for each field to make sure its correct type:
+                                        'If VarType(ExcelArray(row, 1)) = VariantType.Date Then
+                                        'dt.Columns.Add(ExcelArray(RowIDX, ColIDX).ToString, GetType(String))
+                                        'dr.Item(ColIDX) = ExcelArray(RowIDX, ColIDX).ToString
+                                        'Else
+                                        'dt.Rows.Add(New Object() {Nothing, Nothing})
+                                    Next
+                                    tempTable.Rows.Add(dr)
+                                End If
+                                'dt.Rows.Add(New Object() {Nothing, ExcelArray(RowIDX, ColIDX).ToString})
+                                'dt.Rows.Add(dr)
+                                'End If
+                                'Next
+                                Percentage = (RowIDX / bounds) * 100
+                                frmMainGIForm.pbarMain.Value = CInt(Percentage)
+                                Application.DoEvents()
+                            Next
+                            'Dim dr As DataRow
+
+                            'With xlWorkSheet
+                            'For RowIDX = 2 To bounds - 1
+                            'dr = dt.NewRow
+
+                            'dr.Item("Column1") = .Cells(RowIDX, 1).Text
+                            'dr.Item("Column2") = .Cells(RowIDX, 2).Text
+
+
+                            'dt.Rows.Add(dr)
+                            'Next
+                            'End With
+                        End If 'if array not nothing
+						
+						

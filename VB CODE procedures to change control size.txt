@@ -1,0 +1,75 @@
+Dim LastSize As Size
+04
+ 
+05
+    Private Sub Form1_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
+06
+        LastSize = Me.Size
+07
+        'I recommend this so the controls do not
+08
+        'get a width or height of zero whenever
+09
+        'the form is decreased to much
+10
+        Me.MinimumSize = Me.Size
+11
+    End Sub
+12
+ 
+13
+    Private Sub Form1_SizeChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.SizeChanged
+14
+        'This will comapre the width and the height of the last size
+15
+        'and the current size and loop through all of the controls
+16
+        'so that each control will grow or shrink at the same rate
+17
+        'as the form
+18
+            If Me.Width > LastSize.Width Then
+19
+                For Each Ctrl As Control In Me.Controls
+20
+                    Ctrl.Width += (Me.Width - LastSize.Width)
+21
+                Next
+22
+            End If
+23
+            If Me.Width < LastSize.Width Then
+24
+                For Each Ctrl As Control In Me.Controls
+25
+                    Ctrl.Width -= (LastSize.Width - Me.Width)
+26
+                Next
+27
+            End If
+28
+        If Me.Height > LastSize.Height Then
+29
+            For Each Ctrl As Control In Me.Controls
+30
+                Ctrl.Height += (Me.Height - LastSize.Height)
+31
+            Next
+32
+        End If
+33
+        If Me.Height < LastSize.Height Then
+34
+            For Each Ctrl As Control In Me.Controls
+35
+                Ctrl.Height -= (LastSize.Height - Me.Height)
+36
+            Next
+37
+        End If
+38
+        LastSize = Me.Size
+39
+        Me.Text = Me.Size.Width & " " & Button1.Width & " " & Me.Size.Height & " " & Button1.Height
+40
+    End Sub

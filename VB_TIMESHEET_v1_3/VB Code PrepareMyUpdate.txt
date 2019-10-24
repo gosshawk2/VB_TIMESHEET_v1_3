@@ -1,0 +1,149 @@
+Function PrepareMyUpdate(ByVal connString As String, ByVal TableName As String,
+                           ByRef Fieldnames As String, ByVal Fieldvalues As String, ByRef myMessage As String,
+                           Optional ByVal criteria As String = "",
+                           Optional ByRef ExcludeFields As String = "",
+                           Optional ByVal ElementStartIDX As Integer = 0,
+                           Optional ByVal EncaseFields As Boolean = True,
+                           Optional ByVal RemoveBadChars As Boolean = True,
+                           Optional ByVal IncludeComma As Boolean = True,
+                           Optional ByVal IncludeQuotes As Boolean = False) As String
+        Dim FieldNameArray As String()
+        Dim FinalFields As String()
+        Dim IgnoreFieldsArray As String()
+        Dim ValueArray As String()
+        Dim FinalCMD As String
+        Dim IDX As Integer
+        Dim fldName As String
+        Dim fldValue As String
+        Dim NumFields As Integer
+        Dim UpdateCmd As String = "UPDATE"
+        Dim FinalFieldValues As String = ""
+        Dim dtDateTime As DateTime
+
+        FinalCMD = ""
+        ReDim FieldNameArray(1)
+        ReDim FinalFields(1)
+        ReDim IgnoreFieldsArray(1)
+        ReDim ValueArray(1)
+        Try
+            'If Len(IgnoreFields) > 0 Then
+            'IgnoreFieldsArray = strToStringArray(IgnoreFields, ",")
+            'End If
+
+            If Len(TableName) = 0 Then
+                'MsgBox("Error in PrepareUpdate: No Database Table specified", vbOK, "Error in Asset Register")
+                myMessage = "Error in PrepareMyUpdate: No Database Table specified"
+                PrepareMyUpdate = ""
+                Exit Function
+            End If
+            If Len(Fieldnames) = 0 Then
+                'NumFields = GetNumFields(connString, "SELECT * FROM " & TableName, DBName, Fieldnames)
+                Fieldnames = GetMyFields(TableName, connString, myMessage)
+            End If
+            FieldNameArray = strToStringArray(Fieldnames, ",")
+            ValueArray = strToStringArray(Fieldvalues, ",")
+
+            If Len(ExcludeFields) > 0 Then
+                IgnoreFieldsArray = strToStringArray(ExcludeFields, ",")
+            End If
+            Fieldnames = RemoveExtractedFields(FieldNameArray, IgnoreFieldsArray, ",", FieldNameArray) 'rebuilds whole list without the extracted fields
+            FieldNameArray = strToStringArray(Fieldnames, ",")
+            IDX = 0
+            UpdateCmd = "UPDATE " & TableName & " SET "
+            Fieldnames = ""
+            For IDX = 0 To UBound(ValueArray)
+                'If String.IsNullOrEmpty(ValueArray(IDX)) Then
+                'If Len(ValueArray(IDX)) = 0 Or IsNothing(ValueArray(IDX)) Then
+                'ExcludeFields = ExcludeFields & "," & FieldNameArray(IDX)
+                'End If
+                'Else
+                If InStr(ValueArray(IDX), "/") > 0 Then
+                    ValueArray(IDX) = Replace(ValueArray(IDX), "/", "-")
+                    If InStr(ValueArray(IDX), ":") > 0 Then
+                        'The Date DOES contain a TIME also
+                    Else
+                        'ValueArray(IDX) = ValueArray(IDX) & " 01:00:00"
+
+                    End If
+                    If IsDate(ValueArray(IDX)) Then
+                        dtDateTime = CDate(ValueArray(IDX))
+                        ValueArray(IDX) = dtDateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                    End If
+                End If
+                If IDX = 0 Then
+                    FinalFieldValues = ValueArray(IDX)
+                    Fieldnames = FieldNameArray(IDX)
+                Else
+                    FinalFieldValues = FinalFieldValues & "," & ValueArray(IDX)
+                    Fieldnames = Fieldnames & "," & FieldNameArray(IDX)
+                End If
+            Next
+            'IgnoreFieldsArray = strToStringArray(ExcludeFields, ",")
+            'Fieldnames = RemoveExtractedFields(FieldNameArray, IgnoreFieldsArray, ",", FieldNameArray) 'rebuilds whole list without the extracted fields
+            FieldNameArray = strToStringArray(Fieldnames, ",")
+            'ReDim Preserve FieldNameArray(IDX - 1)
+            'The following block needs to go first - element mis-match as the ID field is still included in the above test.
+            If Len(FinalFieldValues) > 0 Then
+                ValueArray = strToStringArray(FinalFieldValues, ",", ElementStartIDX, EncaseFields, RemoveBadChars, IncludeComma, "_", IncludeQuotes)
+                'ValueArray = strToStringArray(FinalFieldValues, ",")
+            End If
+
+            If UBound(FieldNameArray) > 0 And UBound(ValueArray) > 0 Then
+                If UBound(FieldNameArray) < UBound(ValueArray) Then
+                    'MsgBox("Error in PrepareUpdate: Number of Fields Passed are LESS than Number of VALUES passed.", vbOK, "Miss-Match Error in Asset Register " & frmMainGIForm.myVersion)
+                    myMessage = myMessage & vbCrLf & "Error in PrepareMyUpdate: Number of Fields Passed are LESS than Number of VALUES passed."
+                    frmMainGIForm.logger.LogError("GI_Error_v1_1.log", Application.StartupPath, myMessage, "PrepareMyUpdate()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR Logged in:" & frmMainGIForm.myUsername)
+                    PrepareMyUpdate = ""
+                    Exit Function
+                End If
+                If UBound(FieldNameArray) > UBound(ValueArray) Then
+                    'MsgBox("Error in PrepareUpdate: Number of Fields Passed are GREATER than Number of VALUES passed.", vbOK, "Miss-Match Error in Asset Register " & frmMainGIForm.myVersion)
+                    myMessage = myMessage & vbCrLf & "Error in PrepareMyUpdate: Number of Fields Passed are GREATER than Number of VALUES passed."
+                    frmMainGIForm.logger.LogError("GI_Error_v1_1.log", Application.StartupPath, myMessage, "PrepareMyUpdate()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR Logged in:" & frmMainGIForm.myUsername)
+                    PrepareMyUpdate = ""
+                    Exit Function
+                End If
+            End If
+            IDX = 0
+            UpdateCmd = "UPDATE " & TableName & " SET "
+            For IDX = 0 To UBound(FieldNameArray) - 1
+                fldName = FieldNameArray(IDX)
+                fldValue = ValueArray(IDX)
+                If Len(fldValue) > 2 And fldValue IsNot Nothing Then
+
+                    If IDX = 0 Then
+                        If InStr(fldValue, ":") > 0 Then
+                            'FinalCMD = fldName & " = " & Chr(34) & fldValue & Chr(34)
+                            FinalCMD = fldName & " = " & fldValue
+                        Else
+                            FinalCMD = fldName & " = " & fldValue
+                        End If
+                    Else
+                        If InStr(fldValue, ":") > 0 Then
+                            'FinalCMD = FinalCMD & "," & fldName & " = " & Chr(34) & fldValue & Chr(34)
+                            FinalCMD = FinalCMD & "," & fldName & " = " & fldValue
+                        Else
+                            FinalCMD = FinalCMD & "," & fldName & " = " & fldValue
+                        End If
+                    End If
+                Else
+                    'No value
+                    'myMessage = "fldValue(" & CStr(IDX) & ") : " & fldValue(IDX) & " LENGTH= " & CStr(Len(fldValue(IDX)))
+                    myMessage = "Item = 2 chars or less: IDX=" & CStr(IDX)
+                    frmMainGIForm.logger.LogError("GI_Error_v1_1.log", Application.StartupPath, myMessage, "PrepareMyUpdate()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR Logged in:" & frmMainGIForm.myUsername)
+                End If
+            Next
+            FinalCMD = UpdateCmd & FinalCMD
+            If Len(criteria) > 0 Then
+                FinalCMD = FinalCMD & " WHERE " & criteria
+            End If
+
+        Catch ex As Exception
+            'MsgBox("Error Exception in PrepareUpdate: " & ex.ToString, vbOK, "Exception Error in Asset Register")
+            myMessage = myMessage & vbCrLf & "Error Exception in PrepareMyUpdate: " & ex.ToString
+            frmMainGIForm.logger.LogError("GI_Error_v1_1.log", Application.StartupPath, myMessage, "PrepareMyUpdate()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR Logged in:" & frmMainGIForm.myUsername)
+        End Try
+        PrepareMyUpdate = FinalCMD
+
+
+    End Function

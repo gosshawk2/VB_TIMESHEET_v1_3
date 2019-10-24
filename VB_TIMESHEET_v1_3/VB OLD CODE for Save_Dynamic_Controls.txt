@@ -1,0 +1,695 @@
+Function Save_Dynamic_Controls(DeliveryDAte As String, DeliveryRef As String, RecordID As Object) As Boolean
+        Dim OperativeFrame As ScrollableControl
+        Dim ShortsFrame As ScrollableControl
+        Dim ExtraFrame As ScrollableControl
+        Dim ctrlProperty As clsControls
+        Dim ValueProperty As clsControls
+        Dim ControlDeliveryDate As Date
+        Dim ControlDeliveryRef As String
+        Dim DBTAbles() As String
+        Dim ControlsPerRow() As Long
+        Dim ControlFieldname As String
+        Dim TagName As String
+        Dim ControlID As String
+        Dim ControlName As String
+        Dim ControlLowerTag As String
+        Dim ControlUpperTag As String
+        Dim ControlDBTable As String
+        Dim ControlValue As String
+        Dim TAbleIDX As Long
+        Dim Dic_SaveUs As Object
+        Dim Messages As String = ""
+        Dim TotalControlsPerRow As Long
+        Dim VTTAG As Long
+        Dim RowNumber As Long
+        Dim TotalOPFrameRows As Long
+        Dim TotalShortFrameRows As Long
+        Dim TotalExtraFrameRows As Long
+        Dim FrameValue As String
+        Dim ShortOrExtra As String
+        Dim SaveOK() As Boolean
+        Dim ErrMessages() As String
+        Dim UpdateCriteria() As String
+        Dim IsUpdate() As Boolean
+        Dim FoundRecord() As Boolean
+        Dim RecID() As String
+        Dim ExcludeFields() As String
+        Dim ValueArray() As String
+        Dim RowIDX As Long
+        Dim OperativeName As String
+        Dim SplitRowArr() As String
+        Dim Activity As String
+        Dim ExtendCriteria As String
+        Dim EncaseFields As Boolean
+        Dim ValueDelim As String
+        Dim SearchCriteria As String
+        Dim SearchField As String
+        Dim SearchValue As String
+        Dim ReturnField As String
+        Dim AllFieldValues() As Object = Nothing
+        Dim AllFieldnames() As String = Nothing
+        Dim Fieldnames() As String
+        Dim FieldValues() As String
+        Dim FieldIDX As Long
+        Dim strPartNo As String
+        Dim strQty As String
+        Dim Fieldnames2(,) As String
+        Dim FieldValues2(,) As String
+        Dim CountIterations As Long
+        Dim ErrMessage As String
+        Dim TimeWaste As Long
+
+        Save_Dynamic_Controls = False
+        Dic_SaveUs = CreateObject("Scripting.Dictionary")
+        Dic_SaveUs.CompareMode = vbTextCompare
+        ReDim DBTAbles(6)
+        ReDim ControlsPerRow(6)
+        DeliveryDAte = Replace(DeliveryDAte, "-", "/")
+
+        ReDim SaveOK(6)
+        ReDim ErrMessages(6)
+        ReDim UpdateCriteria(6)
+        ReDim IsUpdate(6)
+        ReDim FoundRecord(6)
+        ReDim RecID(6)
+        ReDim ControlsPerRow(6)
+        ReDim ExcludeFields(6)
+        ReDim ValueArray(50)
+        ReDim Fieldnames(6)
+        ReDim FieldValues(6)
+        ReDim Fieldnames2(6, 20) '20 fields.
+        ReDim FieldValues2(6, 20)
+
+        RecID(1) = RecordID(1)
+        RecID(2) = RecordID(2)
+        RecID(3) = RecordID(3)
+        RecID(4) = RecordID(4)
+        RecID(5) = RecordID(5)
+
+        DBTAbles(1) = "tblDeliveryInfo"
+        DBTAbles(2) = "tblSupplierCompliance"
+        DBTAbles(3) = "tblLabourHours"
+        DBTAbles(4) = "tblOperatives"
+        DBTAbles(5) = "tblShortsAndExtraParts"
+        DBTAbles(6) = "tblShortsAndExtraParts"
+
+        ControlsPerRow(1) = 1
+        ControlsPerRow(2) = 1
+        ControlsPerRow(3) = 1
+        ControlsPerRow(4) = 6
+        ControlsPerRow(5) = 3
+        ControlsPerRow(6) = 3
+
+        OperativeFrame = GetFrameControl("GI_TIMESHEET", "Frame_Operatives")
+        CountIterations = 0
+        For Each VarControl In dic_Controls
+            If VarControl Is Nothing Then
+                Continue For
+            End If
+
+            'VarControl = DeliveryDate & "_" & DeliveryRef & "_" & TagName
+            ctrlProperty = dic_Controls(VarControl)
+
+            If ctrlProperty Is Nothing Then
+                'Default DATE:
+                'ControlDeliveryDate = CDate("1900-01-01")
+                Continue For
+                'ControlDeliveryRef = ctrlProperty.ControlDeliveryRef
+            Else
+                ControlDeliveryDate = ctrlProperty.ControlDeliveryDate
+                ControlDeliveryRef = ctrlProperty.ControlDeliveryRef
+
+            End If
+
+            ctrlProperty.ControlLastSaved = Now()
+            ControlFieldname = ctrlProperty.ControlFieldName
+
+            If Not UCase(CStr(ControlDeliveryDate)) = DeliveryDAte Then
+                Continue For
+            End If
+
+            If UCase(CStr(ControlDeliveryDate)) = UCase(DeliveryDAte) Then
+                If UCase(ControlDeliveryRef) = UCase(DeliveryRef) And UCase(ctrlProperty.ControlType) = "COMBOBOX" Or UCase(ctrlProperty.ControlType) = "TEXTBOX" Then
+                    ControlFieldname = ctrlProperty.ControlFieldName
+
+                    TagName = ctrlProperty.ControlTAG
+                    If IsNumeric(TagName) Then
+                        If CLng(TagName) < 33 Then
+                            Continue For
+                        End If
+                    End If
+                    ControlID = ctrlProperty.ControlID 'DeliveryDate and DeliveryRef and TAG NUMBER - for actual ctrlCollection KEY.
+                    ControlName = ctrlProperty.ControlName
+                    ControlLowerTag = ctrlProperty.ControlStartTAG
+                    ControlUpperTag = ctrlProperty.ControlEndTAG
+                    ControlDBTable = ctrlProperty.ControlDBTable
+
+                    ControlValue = ctrlProperty.ControlValue
+                    'TEST HERE IF ANY BAD INPUT FROM USER
+
+                    If Len(ControlFieldname) = 0 Then
+                        'GET it from the Lookup table ! - will need some form of ID though - pass the Control Name:
+                        Messages = Messages & vbCrLf & " No Fieldname for : " & ControlName
+                        Continue For
+                    End If
+
+                    If UCase(ControlDBTable) = UCase(DBTAbles(4)) Then
+                        'NEED TO LOOP THROUGH EACH ROW IN THE FRAME_OPERATIVES CONTROLS HERE AND SAVE.
+                        'THIS WILL MORE LIKELY BE AN INSERT - BUT CAN ALSO BE UPDATE - IF USER IS CHANGING ANY INFO WITHIN THE ROWS.
+                        '*** tblOperatives ***
+                        TAbleIDX = 4
+                        VTTAG = 400
+
+                        RowNumber = Get_NumericPartOfString(ControlName)
+                        'ctrlProperty.ControlRowNumber = RowNumber
+                        'ControlLowerTag = set at start of loop for the current control ...
+
+                        TotalOPFrameRows = GetTotalFrameRows(OperativeFrame, ControlLowerTag, ControlUpperTag, ControlsPerRow(4), VTTAG, True)
+                        'ok so we have total frames and the highest tag now.
+                        'ctrlProperty.ControlStartTAG = ControlLowerTag
+                        'ctrlProperty.ControlEndTAG = ControlUpperTag
+
+                        'Turn all the values into fields and values to save:
+
+                        If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "LINKID_" & CStr(RowNumber)) Then
+                            Dic_SaveUs(CStr(TAbleIDX) & "_" & "LINKID_" & CStr(RowNumber)) = CStr(RecID(3))
+                            Fieldnames2(TAbleIDX, 1) = "LINKID"
+                            FieldValues2(TAbleIDX, 1) = CStr(RecID(3))
+
+                        Else
+                            'ControlValue = DeliveryRef
+                        End If
+
+                        If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "DELIVERYDATE_" & CStr(RowNumber)) Then
+                            Dic_SaveUs(CStr(TAbleIDX) & "_" & "DELIVERYDATE_" & CStr(RowNumber)) = DeliveryDAte
+                            Fieldnames2(TAbleIDX, 2) = "DELIVERYDATE"
+                            FieldValues2(TAbleIDX, 2) = DeliveryDAte
+                        Else
+                            'ControlValue = DeliveryDate
+                        End If
+
+                        If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "DELIVERYREFERENCE_" & CStr(RowNumber)) Then
+                            Dic_SaveUs(CStr(TAbleIDX) & "_" & "DELIVERYREFERENCE_" & CStr(RowNumber)) = DeliveryRef
+                            Fieldnames2(TAbleIDX, 3) = "DELIVERYREFERENCE"
+                            FieldValues2(TAbleIDX, 3) = DeliveryRef
+                        Else
+                            'ControlValue = DeliveryRef
+                        End If
+
+                        If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "FRAMEROWNUMBER_" & CStr(RowNumber)) Then
+                            Dic_SaveUs(CStr(TAbleIDX) & "_" & "FRAMEROWNUMBER_" & CStr(RowNumber)) = CStr(RowNumber)
+                            Fieldnames2(TAbleIDX, 4) = "FRAMEROWNUMBER"
+                            FieldValues2(TAbleIDX, 4) = CStr(RowNumber)
+                        Else
+                            'ControlValue = DeliveryDate
+                        End If
+
+                        If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "TOTAL_ROWS_" & CStr(RowNumber)) Then
+                            Dic_SaveUs(CStr(TAbleIDX) & "_" & "TOTAL_ROWS_" & CStr(RowNumber)) = CStr(TotalOPFrameRows)
+
+                        Else
+                            'ControlValue = DeliveryDate
+                        End If
+
+                        If UCase(ControlFieldname) = "OP_NAME" Then
+                            If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "OP_NAME_" & CStr(RowNumber)) Then
+                                Dic_SaveUs(CStr(TAbleIDX) & "_" & "OP_NAME_" & CStr(RowNumber)) = ControlValue
+                                Fieldnames2(TAbleIDX, 5) = ControlFieldname
+                                FieldValues2(TAbleIDX, 5) = ControlValue
+                            Else
+                                'repeated.
+                            End If
+                            'FieldOpControls(4, RowIDX) = UCase(ControlFieldname)
+                            'ValueOpControls(4, RowIDX) = UCase(ControlValue)
+                        End If
+                        If UCase(ControlFieldname) = "ACTIVITY_NAME" Then
+                            If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "ACTIVITY_NAME_" & CStr(RowNumber)) Then
+                                Dic_SaveUs(CStr(TAbleIDX) & "_" & "ACTIVITY_NAME_" & CStr(RowNumber)) = ControlValue
+                                Fieldnames2(TAbleIDX, 6) = ControlFieldname
+                                FieldValues2(TAbleIDX, 6) = ControlValue
+                            Else
+                                'repeated:
+                            End If
+                        End If
+                        If UCase(ControlFieldname) = "OP_STARTTIME" Then
+                            ValueProperty = dic_Controls(DeliveryDAte & "_" & DeliveryRef & "_" & TagName)
+                            If ValueProperty IsNot Nothing Then
+                                ControlValue = ValueProperty.ControlOpStartDateTime
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "OP_STARTTIME_" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "_" & "OP_STARTTIME_" & CStr(RowNumber)) = ControlValue
+                                    Fieldnames2(TAbleIDX, 7) = ControlFieldname
+                                    FieldValues2(TAbleIDX, 7) = ControlValue
+                                Else
+                                    'Repeated.
+                                End If
+                            Else
+                                'MsgBox("Could not find KEY for Start Time")
+                                ErrMessage = "Could not find KEY for Start Time"
+                                frmMainGIForm.txtMessages.Text = ErrMessage
+                                frmMainGIForm.logger.LogError("GI_ERRORS_1_0.log", Application.StartupPath, ErrMessage, "Save_Dynamic_Controls()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR LOGGED OUT:" & frmMainGIForm.myUsername)
+                            End If
+                        End If
+                        If UCase(ControlFieldname) = "OP_FINISHTIME" Then
+                            ValueProperty = dic_Controls(DeliveryDAte & "_" & DeliveryRef & "_" & TagName)
+                            If ValueProperty IsNot Nothing Then
+                                ControlValue = ValueProperty.ControlOpEndDateTime
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "OP_FINISHTIME_" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "_" & "OP_FINISHTIME_" & CStr(RowNumber)) = ControlValue
+                                    Fieldnames2(TAbleIDX, 8) = ControlFieldname
+                                    FieldValues2(TAbleIDX, 8) = ControlValue
+                                Else
+                                    'Repeated.
+                                End If
+                            Else
+                                'MsgBox("Could not find key for Finish Time")
+                                ErrMessage = "Could not find KEY for Finish Time"
+                                frmMainGIForm.txtMessages.Text = ErrMessage
+                                frmMainGIForm.logger.LogError("GI_ERRORS_1_0.log", Application.StartupPath, ErrMessage, "Save_Dynamic_Controls()", frmMainGIForm.GetComputerName() & "," & frmMainGIForm.GetIPv4Address() & "," & frmMainGIForm.GetIPv6Address() & ", OPERATOR LOGGED OUT:" & frmMainGIForm.myUsername)
+                            End If
+                        End If
+                        If UCase(ControlFieldname) = "OPCOMMENTS" Then
+                            If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "OPCOMMENTS" & CStr(RowNumber)) Then
+                                Dic_SaveUs(CStr(TAbleIDX) & "_" & "OPCOMMENTS_" & CStr(RowNumber)) = ControlValue
+                                Fieldnames2(TAbleIDX, 9) = ControlFieldname
+                                FieldValues2(TAbleIDX, 9) = ControlValue
+                            Else
+                                'repeated:
+                            End If
+                        End If
+
+
+                    End If
+
+                    If UCase(ControlDBTable) = UCase(DBTAbles(5)) Then
+                        'AGAIN NEED TO LOOP THROUGH EACH ROW OF CONTROLS IN FRAME_SHORTSANDEXTRAS AND SAVE EACH ROW:
+                        'THIS WILL MOST LIKELY BE AN INSERT - BUT COULD ALSO BE AN UPDATE IF ANY PART NUMBER OR QUANTITY NEEDS CHANGING.
+                        ' -  HEY WE ALL MAKE MISTAKES !
+                        TAbleIDX = 5
+                        TotalControlsPerRow = 3
+                        '*** tblShortAndExtraParts ***
+                        RowNumber = Get_NumericPartOfString(ControlName)
+                        ShortsFrame = GetFrameControl("GI_TIMESHEET", "Frame_Short_Parts")
+                        ExtraFrame = GetFrameControl("GI_TIMESHEET", "Frame_Extra_Parts")
+                        'ValueProperty.ControlRowNumber = RowNumber
+
+                        If IsNumeric(TagName) Then
+                            If CLng(TagName) > 1000 And CLng(TagName) < 2000 Then
+                                ShortOrExtra = "SHORT"
+                                VTTAG = 1000
+                                TAbleIDX = 5
+                                TotalShortFrameRows = GetTotalFrameRows(ShortsFrame, ControlLowerTag, ControlUpperTag, ControlsPerRow(5), VTTAG, True)
+
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "LINKID_" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "_" & "LINKID_" & CStr(RowNumber)) = CStr(RecID(1)) 'LINK BACK to tblDeliveryInfo record.
+                                    Fieldnames2(TAbleIDX, 1) = "LINKID"
+                                    FieldValues2(TAbleIDX, 1) = CStr(RecID(1))
+                                Else
+                                    'ControlValue = DeliveryRef
+                                End If
+
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "DELIVERYDATE_" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "_" & "DELIVERYDATE_" & CStr(RowNumber)) = DeliveryDAte
+                                    Fieldnames2(TAbleIDX, 2) = "DELIVERYDATE"
+                                    FieldValues2(TAbleIDX, 2) = DeliveryDAte
+                                Else
+                                    'ControlValue = DeliveryDate
+                                End If
+
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "DELIVERYREFERENCE_" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "_" & "DELIVERYREFERENCE_") = DeliveryRef
+                                    Fieldnames2(TAbleIDX, 3) = "DELIVERYREFERENCE"
+                                    FieldValues2(TAbleIDX, 3) = DeliveryRef
+                                Else
+                                    'ControlValue = DeliveryRef
+                                End If
+
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "FRAMEROWNUMBER_" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "_" & "FRAMEROWNUMBER_" & CStr(RowNumber)) = CStr(RowNumber)
+                                    Fieldnames2(TAbleIDX, 4) = "FRAMEROWNUMBER"
+                                    FieldValues2(TAbleIDX, 4) = CStr(RowNumber)
+                                Else
+                                    'ControlValue = DeliveryDate
+                                End If
+
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "TOTAL_ROWS_" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "_" & "TOTAL_ROWS_" & CStr(RowNumber)) = CStr(TotalShortFrameRows)
+
+                                Else
+                                    'ControlValue = DeliveryDate
+                                End If
+
+                                If UCase(ControlFieldname) = "PARTNO" Then
+                                    If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "PARTNO_" & CStr(RowNumber)) Then
+                                        Dic_SaveUs(CStr(TAbleIDX) & "_" & "PARTNO_" & CStr(RowNumber)) = ControlValue
+                                        Fieldnames2(TAbleIDX, 5) = ControlFieldname
+                                        FieldValues2(TAbleIDX, 5) = ControlValue
+                                    Else
+                                        'Repeated
+                                    End If
+                                    'FieldOpControls(5, RowIDX) = UCase(ControlFieldname)
+                                    'ValueOpControls(5, RowIDX) = UCase(ControlValue)
+                                End If
+
+                                If UCase(ControlFieldname) = "QTY" Then
+                                    If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "QTY_" & CStr(RowNumber)) Then
+                                        Dic_SaveUs(CStr(TAbleIDX) & "_" & "QTY_" & CStr(RowNumber)) = ControlValue
+                                        Fieldnames2(TAbleIDX, 6) = ControlFieldname
+                                        FieldValues2(TAbleIDX, 6) = ControlValue
+                                    Else
+                                        'Repeated
+                                    End If
+                                    'FieldOpControls(5, RowIDX) = UCase(ControlFieldname)
+                                    'ValueOpControls(5, RowIDX) = UCase(ControlValue)
+                                End If
+
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "SHORTOREXTRA_" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "_ " & "SHORTOREXTRA_" & CStr(RowNumber)) = ShortOrExtra
+                                    Fieldnames2(TAbleIDX, 7) = ControlFieldname
+                                    FieldValues2(TAbleIDX, 7) = ControlValue
+                                Else
+                                    'repeated.
+                                End If
+
+                            End If
+                            If CLng(TagName) > 2000 Then
+                                ShortOrExtra = "EXTRA"
+                                VTTAG = 2000
+                                TAbleIDX = 6
+
+                                ExtraFrame = GetFrameControl("GI_TIMESHEET", "Frame_Extra_Parts")
+                                TotalExtraFrameRows = GetTotalFrameRows(ExtraFrame, ControlLowerTag, ControlUpperTag, ControlsPerRow(5), VTTAG, False)
+
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "LINKID_" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "_" & "LINKID_" & CStr(RowNumber)) = CStr(RecID(1)) 'LINK BACK to tblDeliveryInfo record.
+                                    Fieldnames2(TAbleIDX, 1) = "LINKID"
+                                    FieldValues2(TAbleIDX, 1) = CStr(RecID(1))
+                                Else
+                                    'ControlValue = DeliveryRef
+                                End If
+
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "DELIVERYDATE_" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "_" & "DELIVERYDATE_" & CStr(RowNumber)) = DeliveryDAte
+                                    Fieldnames2(TAbleIDX, 2) = "DELIVERYDATE"
+                                    FieldValues2(TAbleIDX, 2) = DeliveryDAte
+                                Else
+                                    'ControlValue = DeliveryDate
+                                End If
+
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "DELIVERYREFERENCE_" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "_" & "DELIVERYREFERENCE_") = DeliveryRef
+                                    Fieldnames2(TAbleIDX, 3) = "DELIVERYREFERENCE"
+                                    FieldValues2(TAbleIDX, 3) = DeliveryRef
+                                Else
+                                    'ControlValue = DeliveryRef
+                                End If
+
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "FRAMEROWNUMBER_" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "_" & "FRAMEROWNUMBER_" & CStr(RowNumber)) = CStr(RowNumber)
+                                    Fieldnames2(TAbleIDX, 4) = "FRAMEROWNUMBER"
+                                    FieldValues2(TAbleIDX, 4) = CStr(RowNumber)
+                                Else
+                                    'ControlValue = DeliveryDate
+                                End If
+
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "TOTAL_ROWS_" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "_" & "TOTAL_ROWS_" & CStr(RowNumber)) = CStr(TotalExtraFrameRows)
+
+                                Else
+                                    'ControlValue = DeliveryDate
+                                End If
+
+                                If UCase(ControlFieldname) = "PARTNO" Then
+                                    If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "PARTNO_" & CStr(RowNumber)) Then
+                                        Dic_SaveUs(CStr(TAbleIDX) & "_" & "PARTNO_" & CStr(RowNumber)) = ControlValue
+                                        Fieldnames2(TAbleIDX, 5) = ControlFieldname
+                                        FieldValues2(TAbleIDX, 5) = ControlValue
+                                    Else
+                                        'Repeated
+                                    End If
+                                End If
+
+                                If UCase(ControlFieldname) = "QTY" Then
+                                    If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "QTY_" & CStr(RowNumber)) Then
+                                        Dic_SaveUs(CStr(TAbleIDX) & "_" & "QTY_" & CStr(RowNumber)) = ControlValue
+                                        Fieldnames2(TAbleIDX, 6) = ControlFieldname
+                                        FieldValues2(TAbleIDX, 6) = ControlValue
+                                    Else
+                                        'Repeated
+                                    End If
+                                End If
+
+                                If Not Dic_SaveUs.Exists(CStr(TAbleIDX) & "_" & "SHORTOREXTRA_" & CStr(RowNumber)) Then
+                                    Dic_SaveUs(CStr(TAbleIDX) & "_ " & "SHORTOREXTRA_" & CStr(RowNumber)) = ShortOrExtra
+                                    Fieldnames2(TAbleIDX, 7) = ControlFieldname
+                                    FieldValues2(TAbleIDX, 7) = ControlValue
+                                Else
+                                    'repeated.
+                                End If
+
+                            End If
+                        End If
+
+                    End If
+                End If
+            Else
+                Continue For
+            End If
+            CountIterations = CountIterations + 1
+        Next
+
+        'SAVE tblOperatives:
+        frmMainGIForm.txtMessages.Text = "Iterations:" & CStr(CountIterations)
+        'MsgBox("ITERATIONS= " & CStr(CountIterations))
+        ctrlProperty = dic_Controls(DeliveryDAte & "_" & DeliveryRef & "_" & "43")
+
+        If ctrlProperty IsNot Nothing Then
+            'frmMainGIForm.InsertValueIntoForm("GI_TIMESHEET", "txtMEssages", "Error during save: key not recognised: " & DeliveryDAte & "_" & DeliveryRef & "_" & "43")
+            'Exit Function
+
+            ControlLowerTag = ctrlProperty.ControlStartTAG
+            ControlUpperTag = ctrlProperty.ControlEndTAG
+            TotalControlsPerRow = ControlsPerRow(4)
+            VTTAG = 400
+            OperativeFrame = GetFrameControl("GI_TIMESHEET", "Frame_Operatives")
+            TotalOPFrameRows = GetTotalFrameRows(OperativeFrame, ControlLowerTag, ControlUpperTag, ControlsPerRow(4), VTTAG, True) 'needs TRUE
+
+            RowIDX = 1
+            Do While RowIDX <= TotalOPFrameRows
+                OperativeName = ""
+                TagName = CStr(CLng(ControlLowerTag) + 1 + (RowIDX - 1) * ControlsPerRow(4)) 'OP_NAME1...
+                'OperativeName = ValueProperty.ControlOpName 'CAnnot use here as fear of a NULL value Exception !
+                Activity = ""
+                TagName = CStr(CLng(ControlLowerTag) + 2 + (RowIDX - 1) * ControlsPerRow(4)) 'ACTIVITY_NAME1...
+                'What if user has changed the Employee Name or the Activity before saving after a load from database ?
+                ' - still an update for that row number - but if its a diff person who changed it - is it authorised ? - well this version - just save the operator name.
+                'ExtendCriteria = "OP_NAME = " & Chr(34) & OperativeName & Chr(34) & " AND ACTIVITY_NAME = " & Chr(34) & Activity & Chr(34)
+
+                EncaseFields = False
+                ErrMessages(4) = ""
+                ValueDelim = ","
+                ExcludeFields(4) = ""
+                'test for IsUpdate: Search Database first for Delivery Date and Reference:
+                SearchCriteria = "FrameRownumber = " & RowIDX
+                SearchField = "DeliveryReference"
+                SearchValue = DeliveryRef
+                ReturnField = "ID"
+                'test for IsUpdate: Search Database first for Delivery Date and Reference:
+                FoundRecord(4) = Find_myQuery(frmMainGIForm.myConnString, DBTAbles(4), SearchField, SearchValue, "STRING",
+                                                      ReturnField, RecID(4), AllFieldValues, AllFieldnames, SearchCriteria)
+                If FoundRecord(4) Then
+                    IsUpdate(4) = True
+                    UpdateCriteria(4) = "ID = " & RecID(4)
+
+                    'THIS IS CAUSING THE FIRST RECORD to be saved with the latest AMENDMENTS / UPDATE DATA to last record entered !!!!
+
+
+                    'Should have a name and a START TIME already.
+                    'SAME OPERATIVE can have different ACTIVITIES at Different TIMES.
+                Else
+                    'Why would we get here ? - so a row has been added but nothing has been saved yet - test if any entries have been made:
+                    ' - if there is a name - then save row - even though a time might not have been entered ???
+                    TagName = CStr(CLng(ControlLowerTag) + 1 + (RowIDX - 1) * ControlsPerRow(4)) 'OP_NAME1...
+                    If Dic_SaveUs.Exists("4_OP_NAME_" & CStr(RowIDX)) Then
+                        ValueProperty = dic_Controls(DeliveryDAte & "_" & DeliveryRef & "_" & TagName)
+                        OperativeName = ValueProperty.ControlOpName
+                    End If
+                    If OperativeName = "UNKNOWN" Or Len(OperativeName) = 0 Then
+                        'MsgBox("Row " & CStr(RowIDX) & " has no name ")
+                        frmMainGIForm.txtMessages.Text = "Row " & CStr(RowIDX) & " has no name "
+                        'Exit Function
+                    End If
+                    If Dic_SaveUs.Exists("4_OP_STARTTIME_" & CStr(RowIDX)) Then
+                        TagName = CStr(CLng(ControlLowerTag) + 3 + VTTAG)
+                        ValueProperty = dic_Controls(DeliveryDAte & "_" & DeliveryRef & "_" & TagName)
+                        ControlValue = ValueProperty.ControlOpStartDateTime
+                        If ControlValue = "00:00:00" Then
+                            'MsgBox("Please enter a START TIME for row: " & CStr(RowIDX))
+                            'Exit Function
+                        End If
+                    End If
+                    If Dic_SaveUs.Exists("4_OP_FINISHTIME_" & CStr(RowIDX)) Then
+                        TagName = CStr(CLng(ControlLowerTag) + 4 + VTTAG)
+                        ValueProperty = dic_Controls(DeliveryDAte & "_" & DeliveryRef & "_" & TagName)
+                        ControlValue = ValueProperty.ControlOpEndDateTime
+                        If ControlValue = "00:00:00" Then
+                            'MsgBox("Please enter a FINISH TIME for row: " & CStr(RowIDX))
+                            'Exit Function
+                        End If
+                    End If
+
+                    'CREATE A NEW RECORD.
+                    IsUpdate(4) = False
+                    UpdateCriteria(4) = ""
+                End If
+
+                Call ConvertDic_ToInsertFields(4, frmMainGIForm.myConnString, DBTAbles(4), Dic_SaveUs, RowIDX, Fieldnames(4), FieldValues(4))
+
+                'SaveOK(4) = InsertUpdateMyRecord(IsUpdate(4), frmMainGIForm.myConnString, DBTAbles(4), Fieldnames(4), FieldValues(4),
+                'ErrMessages(4), UpdateCriteria(4), ExcludeFields(4), 0, True, True, True, False)
+
+                SaveOK(4) = InsertUpdateRecords_Using_Parameters(frmMainGIForm.myConnString, IsUpdate(4), "", DBTAbles(4), Fieldnames(4), FieldValues(4),
+                    UpdateCriteria(4), ExcludeFields(4), ErrMessages(4), False, ",")
+
+                RowIDX = RowIDX + 1
+            Loop
+
+        End If
+        'tblShortsAndExtraParts:
+
+        'Need to call InsertShortParts
+        VTTAG = 1000
+        ctrlProperty = dic_Controls(DeliveryDAte & "_" & DeliveryRef & "_" & CStr(VTTAG + 1))
+
+        If ctrlProperty IsNot Nothing Then
+
+            ControlLowerTag = ctrlProperty.ControlStartTAG
+            ControlUpperTag = ctrlProperty.ControlEndTAG
+            TotalControlsPerRow = ControlsPerRow(5)
+
+            ShortsFrame = GetFrameControl("GI_TIMESHEET", "Frame_Operatives")
+            TotalShortFrameRows = GetTotalFrameRows(ShortsFrame, ControlLowerTag, ControlUpperTag, ControlsPerRow(5), VTTAG, True)
+
+            RowIDX = 1
+            Do While RowIDX <= TotalShortFrameRows
+
+                If Not Dic_SaveUs.Exists("5_PARTNO_" & CStr(RowIDX)) Then
+                    strPartNo = "UNKNOWN"
+                Else
+                    TagName = CStr(CLng(ControlLowerTag) + 1 + (RowIDX - 1) * ControlsPerRow(5)) 'PartNo1...
+                    ValueProperty = dic_Controls(DeliveryDAte & "_" & DeliveryRef & "_" & TagName)
+                    strPartNo = ValueProperty.ControlPartNo ' may be blank as not sure if PARTNO populated ?
+                End If
+                If Not Dic_SaveUs.Exists("5_QTY_" & CStr(RowIDX)) Then
+                    strQty = "UNKNOWN"
+                Else
+                    TagName = CStr(CLng(ControlLowerTag) + 2 + (RowIDX - 1) * ControlsPerRow(5)) 'PartNo1...
+                    ValueProperty = dic_Controls(DeliveryDAte & "_" & DeliveryRef & "_" & TagName)
+                    strQty = ValueProperty.ControlQty ' may be blank as not sure if QTY populated ?
+                End If
+
+                'ExtendCriteria = "PARTNO = " & Chr(34) & strPartNo & Chr(34) & " AND ShortOrExtra = " & Chr(34) & "SHORT" & Chr(34)
+
+                ExcludeFields(5) = ""
+                'test for IsUpdate: Search Database first for Delivery Date and Reference:
+                SearchCriteria = "FRAMEROWNUMBER = " & RowIDX
+                SearchField = "DeliveryReference"
+                SearchValue = DeliveryRef
+                ReturnField = "ID"
+
+                'SHORTs
+
+                'test for IsUpdate: Search Database first for Delivery Date and Reference:
+                FoundRecord(5) = Find_myQuery(frmMainGIForm.myConnString, DBTAbles(5), SearchField, SearchValue, "STRING",
+                                                          ReturnField, RecID(5), AllFieldValues, AllFieldnames, SearchCriteria)
+                If FoundRecord(5) Then
+                    IsUpdate(5) = True
+                    UpdateCriteria(5) = "ID = " & RecID(5)
+                Else
+                    IsUpdate(5) = False
+                    UpdateCriteria(5) = ""
+                End If
+
+                Call ConvertDic_ToInsertFields(5, frmMainGIForm.myConnString, DBTAbles(5), Dic_SaveUs, RowIDX, Fieldnames(5), FieldValues(5))
+
+                'SaveOK(5) = InsertUpdateMyRecord(IsUpdate(5), frmMainGIForm.myConnString, DBTAbles(5), Fieldnames(5), FieldValues(5),
+                'ErrMessages(5), UpdateCriteria(5), ExcludeFields(5), 0, True, True, True, False)
+
+                SaveOK(5) = InsertUpdateRecords_Using_Parameters(frmMainGIForm.myConnString, IsUpdate(5), "", DBTAbles(5), Fieldnames(5), FieldValues(5),
+                    UpdateCriteria(5), ExcludeFields(5), ErrMessages(5), False, ",")
+
+                RowIDX = RowIDX + 1
+            Loop
+        End If
+
+        'tblExtras:
+        VTTAG = 2000
+        ctrlProperty = dic_Controls(DeliveryDAte & "_" & DeliveryRef & "_" & CStr(VTTAG + 1))
+
+        If ctrlProperty IsNot Nothing Then
+
+            ControlUpperTag = ctrlProperty.ControlEndTAG
+            TagName = ctrlProperty.ControlTAG
+            TotalControlsPerRow = ControlsPerRow(6)
+
+            ExtraFrame = GetFrameControl("GI_TIMESHEET", "Frame_Extra_Parts")
+            TotalExtraFrameRows = GetTotalFrameRows(ExtraFrame, ControlLowerTag, ControlUpperTag, ControlsPerRow(6), VTTAG, False)
+
+            RowIDX = 1
+            Do While RowIDX <= TotalExtraFrameRows
+                If Not Dic_SaveUs.Exists("6_PARTNO_" & CStr(RowIDX)) Then
+                    strPartNo = "UNKNOWN"
+                Else
+                    '
+                End If
+                If Not Dic_SaveUs.Exists("6_QTY_" & CStr(RowIDX)) Then
+                    strQty = "UNKNOWN"
+                Else
+                    '
+                End If
+
+                'ExtendCriteria = "PARTNO = " & Chr(34) & strPartNo & Chr(34) & " AND ShortOrExtra = " & Chr(34) & "EXTRA" & Chr(34)
+
+                ExcludeFields(6) = ""
+                'test for IsUpdate: Search Database first for Delivery Date and Reference:
+                SearchCriteria = "FRAMEROWNUMBER = " & RowIDX
+                SearchField = "DeliveryReference"
+                SearchValue = DeliveryRef
+                ReturnField = "ID"
+                'test for IsUpdate: Search Database first for Delivery Date and Reference:
+                FoundRecord(6) = Find_myQuery(frmMainGIForm.myConnString, DBTAbles(6), SearchField, SearchValue, "STRING",
+                                                          ReturnField, RecID(6), AllFieldValues, AllFieldnames, SearchCriteria)
+                If FoundRecord(6) Then
+                    IsUpdate(6) = True
+                    UpdateCriteria(6) = "ID = " & RecID(6)
+                Else
+                    IsUpdate(6) = False
+                    UpdateCriteria(6) = ""
+                End If
+                Call ConvertDic_ToInsertFields(6, frmMainGIForm.myConnString, DBTAbles(6), Dic_SaveUs, RowIDX, Fieldnames(6), FieldValues(6))
+
+                'SaveOK(6) = InsertUpdateMyRecord(IsUpdate(6), frmMainGIForm.myConnString, DBTAbles(6), Fieldnames(6), FieldValues(6),
+                'ErrMessages(6), UpdateCriteria(6), ExcludeFields(6), 0, True, True, True, False)
+
+                SaveOK(6) = InsertUpdateRecords_Using_Parameters(frmMainGIForm.myConnString, IsUpdate(6), "", DBTAbles(6), Fieldnames(6), FieldValues(6),
+                    UpdateCriteria(6), ExcludeFields(6), ErrMessages(6), False, ",")
+
+                RowIDX = RowIDX + 1
+            Loop
+
+        End If
+        If SaveOK(4) = True And SaveOK(5) = True And SaveOK(6) = True Then
+            Save_Dynamic_Controls = True
+        Else
+            Save_Dynamic_Controls = False
+        End If
+        'Iterarte through the new array created above to extract each row for the Operatives:
+        ' AND SAVE after gathering the FIELDS and VALUES:
+
+        'BUT we need the record ID of the parent record first ?????????????????? so the LINKID is populated.
+
+        'OK so we have two loops then. The first to establish and save the STATIC control records and setup record IDs.
+        'The second loop will go through and filter on just the CHILD TABLES and will have an inner loop that will detect when a row change happens.
+
+    End Function
+	
+	

@@ -1,0 +1,192 @@
+Sub Initialize(TheDatabaseType As String)
+        Dim NumRows As Long = 0
+        Dim conString As String = "" 'not used here.
+        Dim Messages As String = ""
+        Dim cf As New frmMysqlLogin
+
+        If UCase(DatabaseType) = "ACCDB" Then
+            'PopulateDataSource(dgvRegister, DBName, DBProvider, "SELECT " & DisplayRegistryFields & " From tblRegister ORDER BY DateOut DESC", Messages, NumRows)
+            Startup(DatabaseType)
+        Else
+            For xxx = 1 To 3000
+                'wait
+            Next
+            Application.DoEvents()
+
+            If myLoggedIn Then
+                Initialised = True
+                Startup(DatabaseType)
+
+            Else
+                'Now its an MDI app - so create MID child form:
+                'cf.MdiParent = Me
+                'cf.StartPosition = FormStartPosition.CenterParent
+                'cf.Text = "Goods In LOGIN" & CStr(MdiChildren.Count)
+                'cf.Name = "GI_LOGIN"
+                'cf.Show)
+                frmMysqlLogin.ShowDialog()
+
+                frmMysqlLogin.txtUsername.Focus()
+                Initialised = True
+                Startup(DatabaseType)
+            End If
+        End If
+        zoomcontrolvalue = 50
+
+    End Sub
+
+    Sub Startup(TheDatabaseType As String)
+        Dim NumRows As Long = 0
+        Dim NumOperators As Long = 0
+        Dim conString As String = ""
+        Dim Messages As String = ""
+        Dim MyOpsMessages As String = ""
+        Dim OpMessages As String = ""
+        Dim ColWidths As String = ""
+        Dim UserId As String = ""
+        Dim Username As String = ""
+        Dim ComputerName As String = ""
+        Dim IPv4Addr As String = ""
+        Dim IPv6Addr As String = ""
+        Dim EmpNo As String = ""
+        Dim Firstname As String = ""
+        Dim Lastname As String = ""
+        Dim Location As String = ""
+        Dim Comments As String = "" 'The Computer Workstation number - usually.
+        Dim OnlineMsg As String = ""
+        Dim strWorkstationID As String = ""
+        Dim OpsOnlineCriteria As String = ""
+        Dim cf As New frmGI_RP_Userform
+
+        Me.WindowState = FormWindowState.Maximized
+        Me.ShowIcon = True
+
+        Me.ShowInTaskbar = True
+        If TheDatabaseType = "MYSQL" Then
+            If myLoggedIn Then
+                KeyPreview = True
+                Me.DatabaseType = "MYSQL"
+                UserId = myUserID
+                Username = myUsername
+
+                If Get_NumericPartOfString(Username) > 0 Then
+                    myUsernameSuffix = CStr(Get_NumericPartOfString(Username)) 'eg dgoss_2 , dgoss_3 and dgoss_4
+                Else
+                    myUsernameSuffix = ""
+                End If
+
+                ComputerName = GetComputerName()
+                IPv4Addr = GetIPv4Address()
+                IPv6Addr = GetIPv6Address()
+                mySessionID = Get_GUID()
+                Location = ""
+                EmpNo = myEmpNo
+                Firstname = myFirstname
+                Lastname = myLastname
+                GetDetails(myConnString, "tblOperatorComputers", "ComputerName", ComputerName, "Location", Location, OnlineMsg)
+                strWorkstationID = ""
+                GetDetails(myConnString, "tblOperatorComputers", "ComputerName", ComputerName, "WorkstationName", strWorkstationID, OnlineMsg)
+                'Find the EmpNo logged in now.
+                'Remove from the online Operators table first - before adding a new one.
+                'so set the criteria: No - use the UserID - only reliable bit of data - as same Operator could log into a diffent machine.
+                OpsOnlineCriteria = "ComputerName = " & Chr(39) & ComputerName & Chr(39)
+                DeleteMyRecord("tblOperatorsOnline", myConnString, OpsOnlineCriteria, Messages)
+                saveSession(myConnString, UserId, Username, ComputerName, IPv4Addr, IPv6Addr, mySessionID, myAccessRights,
+                                Messages, EmpNo, Firstname, Lastname, Comments, Location, strWorkstationID, myVersion, MyOpsMessages)
+                If myServer! = "localhost" Then
+                    'WHAT DOES THIS DO ?
+                    'saveSession(myLOCALConnString, UserId, Username, ComputerName, IPv4Addr, IPv6Addr, mySessionID, myAccessRights,
+                    'Messages, EmpNo, Firstname, Lastname, Comments, Location, strWorkstationID, MyOpsMessages)
+                End If
+                If Len(Messages) > 0 Or Len(MyLocalMessage) > 0 Then
+                    Me.txtMessages.Text = "Error from Save Session: " & Messages & vbCrLf & " " & MyLocalMessage
+                End If
+
+                'Need to adjust the column widths:
+                ColWidths = ""
+                If Initialised Then
+                    'If logged in remotely - does this need to be done twice ?
+                    'If logged in locally - myConnString should contain the local connection.
+                    'Operators need a criteria - only view those that are logged in now !
+                    'CHECK THIS OUT - GIVING ERROR ?????
+                    'PopulateMyDataSource(dgvRegister.DataSource, myConnString, "SELECT " & DisplayRegistryFields & " From tblRegister ORDER BY DateOut DESC", NumRows, Messages)
+                    'Select Case OPS.username,ops.firstname,ops.lastname,ops.empno,ops.isloggedin,ses.computername,ses.ipv4addr,ses.logindatetime,ses.logoffdatetime
+                    'From tblOperators ops
+                    'Left Join tblSessions ses on ops.sessionid = ses.sessionid
+                    '-- Where ops.username = ses.username
+                    '-- And ops.isloggedin = 1
+                    'WHERE ops.isloggedin = 1
+                    'PopulateMyDataSource(dgvOperators.DataSource, myConnString, DisplayOperatorFields, NumOperators, OpMessages)
+                    Application.DoEvents()
+                    Beep()
+                    Me.myName = Me.myFirstname & " " & Me.myLastname
+                    ControlsManager.Initialise()
+                    Me.txtMessages.Text = "WELCOME " & Me.myName & " TO THE Goods In TIMESHEET " & myVersion
+
+                    'PopulateTreeView(25000,30000)
+                    'CheckAssetTree()
+                    Me.CreateNewUsersToolStripMenuItem.Visible = False
+                    Me.ShowAltControlToolStripMenuItem.Visible = False
+                    Me.SendMessageToolStripMenuItem.Visible = False
+                    If UCase(myAccessRights) = "ADMIN" Then
+                        Me.CreateNewUsersToolStripMenuItem.Visible = True
+                        'Me.AddUserToolStripMenuItem.Enabled = True
+                        'Me.AddUserToDB.Visible = True
+                        'Me.rbIgnoreNotCheckedOut.Visible = False
+                    End If
+                    If UCase(myAccessRights) = "SUPER" Then
+                        Me.CreateNewUsersToolStripMenuItem.Visible = True
+                        Me.ShowAltControlToolStripMenuItem.Visible = True
+                        Me.SendMessageToolStripMenuItem.Visible = True
+                        'Me.AddUserToolStripMenuItem.Enabled = True
+                        'Me.AddUserToDB.Visible = True
+                        'Me.rbIgnoreNotCheckedOut.Visible = False
+
+                    End If
+
+                    Me.IsMdiContainer = True
+
+                    ControlPanelFormName = "GI_TIMESHEET_"
+                    CPFormName = "GI_TIMESHEET_"
+                    ControlPanelIdx = Get_GUID()
+                    FormID = ControlPanelIdx
+
+                    cf.MdiParent = Me
+                    cf.StartPosition = FormStartPosition.Manual
+                    cf.Text = "Goods In Control Panel " & Now().ToString("dd/MM/yyyy HH:mm:ss")
+                    cf.Name = CPFormName & FormID
+                    cf.Tag = FormID
+                    Clear_Entry_Controls(CPFormName & FormID, 1, 40)
+                    Clear_Entry_Controls(CPFormName & FormID, 801, 807)
+                    cf.Show()
+                    'cf.ShowDialog() - gives error
+
+
+                End If
+            Else
+                MsgBox("Need to LOGIN")
+                Application.Exit()
+            End If
+        End If
+        If DEBUG_MODE = False Then
+            Timer1.Interval = 1000
+            Timer1.Start()
+            Timer2.Interval = 5000
+            Timer2.Start()
+
+            Me.txtMainClock.Visible = True
+        End If
+        KeyPreview = True
+        Me.TopMost = False
+        'Me.ClearBoxes()
+        'Me.txtAssetEntry.Focus()
+        Beep()
+        If Len(Messages) > 0 Then
+            'Me.txtStatusMessage.AppendText(CStr(Now() & Messages))
+            logger.LogError("GI_ERRORS_" & myVersion & ".log", Application.StartupPath, Messages, "Startup()",
+                            GetComputerName() & "," & GetIPv4Address() & "," & GetIPv6Address() & ", OPERATOR LOGGED OUT:" & myUsername,
+                            myUsernameSuffix)
+            Exit Sub
+        End If
+        'Me.txtTotalRegisterEntries.Text = CStr(NumRows)
+    End Sub

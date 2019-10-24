@@ -1,0 +1,8 @@
+Android Configuration
+To start using Instabug in your Android application, add the following line in the OnCreate method inside the MainApplication class.
+
+new Instabug.Builder(this, "e9f5a61d297de93d2b58822707dba1f9")
+  .SetInvocationEvent(InstabugInvocationEvent.Shake)
+  .Build();
+  
+  
